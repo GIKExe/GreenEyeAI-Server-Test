@@ -294,7 +294,7 @@ ws://<server_ip>:8000/ws/esp?device_id=esp_01
 	"type": "commands_list",
 	"commands": [
 		{"id": 1, "type": "light_on", "params": {}},
-	{"id": 2, "type": "fan_off", "params": {}},
+		{"id": 2, "type": "fan_off", "params": {}},
 		{"id": 3, "type": "water_on", "params": {"duration": 30}}
 	]
 }

@@ -65,9 +65,9 @@ class Server:
 				res = Response(404).text("404: Страница не найдена")
 			client.send(res.to_bytes())
 
-			if res.headers['Connection'] == 'close':
+			if req.headers['Connection'] == 'close':
 				running = False
-			elif res.headers['Connection'] == 'keep-alive':
+			elif req.headers['Connection'] == 'keep-alive':
 				client.settimeout(60.0)
 
 		client.close()

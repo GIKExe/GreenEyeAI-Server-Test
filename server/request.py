@@ -1,5 +1,8 @@
 from __future__ import annotations
+from typing import Any 
 from socket import socket as Socket, MSG_PEEK
+import json
+
 from .inet import KiB
 
 
@@ -9,6 +12,13 @@ class Request:
 	version: str
 	headers: dict[str, str]
 	data: bytes
+
+	def __init__(self, method: str = 'GET', path: str = '/') -> None:
+		self.method = method
+		self.path = path
+		self.version = 'HTTP/1.1'
+		self.headers = dict()
+		self.data = b''
 	
 	@staticmethod
 	def from_socket(client: Socket) -> Request | None:
@@ -44,16 +54,28 @@ class Request:
 			while True:
 				if (len(req.data) >= size):
 					break
-				req.data += client.recv(size - len(data))
+				req.data += client.recv(size - len(req.data))
 	
 		return req
 	
-	def http_body(self) -> str:
+	def json(self, data: dict | list) -> Request:
+		self.headers['Content-Type'] = 'application/json'
+		self.data = json.dumps(data).encode('utf8')
+		return self
+	
+	def get_json(self) -> Any:
+		return json.loads(self.data)
+	
+	def get_http_body(self) -> str:
 		line: str = ' '.join([self.method, self.path, self.version])
 		return '\r\n'.join([line,] + [f'{k}: {v}' for k, v in self.headers.items()]) + '\r\n\r\n'
 	
 	def to_str(self) -> str:
-		return self.http_body() + self.data.decode('utf8')
+		if len(self.data) > 0:
+			self.headers['Content-Length'] = str(len(self.data))
+		return self.get_http_body() + self.data.decode('utf8')
 	
 	def to_bytes(self) -> bytes:
-		return self.http_body().encode('ascii') + self.data
+		if len(self.data) > 0:
+			self.headers['Content-Length'] = str(len(self.data))
+		return self.get_http_body().encode('ascii') + self.data
