@@ -48,7 +48,12 @@ class Request:
 	
 		return req
 	
-	def to_bytes(self) -> bytes | None:
+	def http_body(self) -> str:
 		line: str = ' '.join([self.method, self.path, self.version])
-		text: str = '\r\n'.join([line,] + [f'{k}: {v}' for k, v in self.headers.items()])
-		return text.encode('ascii') + b'\r\n\r\n' + self.data
+		return '\r\n'.join([line,] + [f'{k}: {v}' for k, v in self.headers.items()]) + '\r\n\r\n'
+	
+	def to_str(self) -> str:
+		return self.http_body() + self.data.decode('utf8')
+	
+	def to_bytes(self) -> bytes:
+		return self.http_body().encode('ascii') + self.data

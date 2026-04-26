@@ -4,31 +4,33 @@ from time import sleep
 from typing import Callable
 
 from .logging import info, warn
-from .threads import non_blocking
+from .threads import nonblocking
 from .request import Request
 from .response import Response
 
 
-CallBack = Callable[[Socket], Response]
+CALLBACK_TYPE = Callable[[Request], Response]
 
 class Server:
 	host: str
 	port: int
 	socket: Socket
-	paths: dict[str, CallBack]
+	paths: dict[str, CALLBACK_TYPE]
+	func: Callable[[], None]
 
-	def __init__(self, host: str = '0.0.0.0', port: int = 5000) -> None:
+	def __init__(self, host: str = '0.0.0.0', port: int = 5000, main: Callable[[], None] | None = None) -> None:
 		self.paths = dict()
 		self.host = host
 		self.port = port
+		self.func = main if main else (lambda: None)
 
 	# используется для добавления обработчика на путь
-	def path(self, path: str) -> Callable[..., None]:
-		def wrapper(func: CallBack):
+	def path(self, path: str) -> Callable[[CALLBACK_TYPE], None]:
+		def wrapper(func: CALLBACK_TYPE):
 			self.paths[path] = func
 		return wrapper
 		
-	@non_blocking
+	@nonblocking
 	def accepting(self) -> None:
 		running: bool = True
 		while running:
@@ -38,7 +40,7 @@ class Server:
 			client, (ip, port) = self.socket.accept()
 			self.processing(client, ip, port) # не блокирует поток
 
-	@non_blocking
+	@nonblocking
 	def processing(self, client: Socket, ip: str, port: int) -> None:
 		info(f'Подключился клиент: {ip}:{port}')
 		client.settimeout(5.0)
@@ -58,7 +60,7 @@ class Server:
 				continue
 
 			if req.path in self.paths:
-				res = self.paths[req.path](client)
+				res = self.paths[req.path](req)
 			else:
 				res = Response(404).text("404: Страница не найдена")
 			client.send(res.to_bytes())
@@ -84,3 +86,7 @@ class Server:
 			info("Принудительная остановка сервера")
 		except:
 			raise
+
+	def main(self, main: Callable[[], None]) -> Server:
+		self.func = main
+		return self
