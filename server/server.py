@@ -1,0 +1,86 @@
+from __future__ import annotations
+from socket import socket as Socket, AF_INET, SOCK_STREAM
+from time import sleep
+from typing import Callable
+
+from .logging import info, warn
+from .threads import non_blocking
+from .request import Request
+from .response import Response
+
+
+CallBack = Callable[[Socket], Response]
+
+class Server:
+	host: str
+	port: int
+	socket: Socket
+	paths: dict[str, CallBack]
+
+	def __init__(self, host: str = '0.0.0.0', port: int = 5000) -> None:
+		self.paths = dict()
+		self.host = host
+		self.port = port
+
+	# используется для добавления обработчика на путь
+	def path(self, path: str) -> Callable[..., None]:
+		def wrapper(func: CallBack):
+			self.paths[path] = func
+		return wrapper
+		
+	@non_blocking
+	def accepting(self) -> None:
+		running: bool = True
+		while running:
+			client: Socket
+			ip: str
+			port: int
+			client, (ip, port) = self.socket.accept()
+			self.processing(client, ip, port) # не блокирует поток
+
+	@non_blocking
+	def processing(self, client: Socket, ip: str, port: int) -> None:
+		info(f'Подключился клиент: {ip}:{port}')
+		client.settimeout(5.0)
+		running: bool = True
+		while running:
+			try:
+				req = Request.from_socket(client)
+			except TimeoutError:
+				running = False
+				continue
+			except:
+				raise
+
+			if req is None: 
+				warn(f'Запрос не верный для HTTP, отключение: {ip}:{port}')
+				running = False
+				continue
+
+			if req.path in self.paths:
+				res = self.paths[req.path](client)
+			else:
+				res = Response(404).text("404: Страница не найдена")
+			client.send(res.to_bytes())
+
+			if res.headers['Connection'] == 'close':
+				running = False
+			elif res.headers['Connection'] == 'keep-alive':
+				client.settimeout(60.0)
+
+		client.close()
+
+	def start(self) -> None:
+		info('Запуск приложения')
+		self.socket: Socket = Socket(AF_INET, SOCK_STREAM)
+		self.socket.bind((self.host, self.port))
+		self.socket.listen()
+		self.accepting() # не блокирует поток
+
+		try:
+			while True:
+				sleep(1)
+		except KeyboardInterrupt:
+			info("Принудительная остановка сервера")
+		except:
+			raise

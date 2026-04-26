@@ -1,14 +1,13 @@
-from socket import socket as Socket, MSG_PEEK, timeout
-from functools import wraps
-from .inet import *
-from ..utils.logging import *
+from __future__ import annotations
+from socket import socket as Socket, MSG_PEEK
+from .inet import KiB
 
 
 class Request:
 	method: str
 	path: str
 	version: str
-	headers: dict[str: str]
+	headers: dict[str, str]
 	data: bytes
 	
 	@staticmethod
@@ -25,7 +24,6 @@ class Request:
 		headers: list[str] = text.split('\r\n')
 
 		line: str = headers.pop(0)
-		method: str; path: str; version: str;
 		method, path, version = line.split(' ', 2)
 
 		if '?' in path:
@@ -40,11 +38,14 @@ class Request:
 			header, content = header.split(': ', 1)
 			req.headers[header] = content
 
+		req.data = b''
 		if 'Content-Length' in req.headers:
-			...
-		else:
-			req.data = b''
-
+			size: int = int(req.headers['Content-Length'])
+			while True:
+				if (len(req.data) >= size):
+					break
+				req.data += client.recv(size - len(data))
+	
 		return req
 	
 	def to_bytes(self) -> bytes | None:
