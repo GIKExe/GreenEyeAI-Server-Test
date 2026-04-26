@@ -18,7 +18,11 @@ class Server:
 	paths: dict[str, CALLBACK_TYPE]
 	func: Callable[[], None]
 
-	def __init__(self, host: str = '0.0.0.0', port: int = 5000, main: Callable[[], None] | None = None) -> None:
+	def __init__(self,
+		host: str = '0.0.0.0',
+		port: int = 5000,
+		main: Callable[[], None] | None = None
+	) -> None:
 		self.paths = dict()
 		self.host = host
 		self.port = port
@@ -70,7 +74,6 @@ class Server:
 				running = False
 			elif req.headers['Connection'] == 'keep-alive':
 				client.settimeout(60.0)
-
 		client.close()
 
 	def start(self) -> None:
