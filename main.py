@@ -1,8 +1,6 @@
 
-from .server import Server
-from .response import Response
-from .request import Request
-from .logging import info
+from server import Server, Request, Response
+from server.logging import info
 
 server = Server()
 
