@@ -42,13 +42,14 @@ class Server:
 
 	@nonblocking
 	def processing(self, client: Socket, ip: str, port: int) -> None:
-		info(f'Подключился клиент: {ip}:{port}')
+		info(f'Подключение: {ip}:{port}')
 		client.settimeout(5.0)
 		running: bool = True
 		while running:
 			try:
 				req = Request.from_socket(client)
-			except TimeoutError:
+			except TimeoutError, ConnectionResetError:
+				info(f'Отключение: {ip}:{port}')
 				running = False
 				continue
 			except:

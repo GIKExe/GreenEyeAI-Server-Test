@@ -25,6 +25,8 @@ class Request:
 		req: Request = Request()
 		# читаем заголовки HTTP
 		data: bytes = client.recv(KiB*4, MSG_PEEK) # опасная функция
+		if not data:
+			raise ConnectionResetError
 		index: int = data.find(b'\r\n\r\n')
 		if index < 0:
 			return None
