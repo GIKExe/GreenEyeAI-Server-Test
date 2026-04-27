@@ -1,46 +1,37 @@
-from threading import RLock
+from threading import Lock
 
-from server import Server, Request, Response, Data
-from server.logging import info
+from server import Server, Request, Response
+from server import Data, DataBase
+
+from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 
 
-data = Data()
+data = Data() # общие переменные и тд
+data.commands = list()
+data.commands_lock = Lock()
 
-server = Server(data)
-server.db_curs.execute("DROP TABLE IF EXISTS sensors")
-server.db_curs.execute("""
-	CREATE TABLE sensors (
+database = DataBase('main.db')
+database.execute('''
+	CREATE TABLE IF NOT EXISTS sensors (
 		temperature FLOAT NOT NULL,
 		humidity FLOAT NOT NULL
 	)
-""")
+''')
 
-@server.path('/')
-def index_path(d: Data, req: Request) -> Response:
+server = Server(data, database=database)
+
+
+@server.path('GET', '/')
+def index_path(server: Server, req: Request) -> Response:
 	return Response(200).text('Домашняя страничка')
 
-def test_path(d: Data, req: Request) -> Response:
+
+@server.path('GET', '/me')
+def me_path(server: Server, req: Request) -> Response:
 	return Response(200).text(req.get_http_body().replace('\r\n', '<br>'))
 
-def esp_sensors_path(d: Data, req: Request) -> Response:
-	cursor: list = d.cursor
-	lock: RLock = d.cursor_lock
-	data: dict = req.get_json()
-	if 'temperature' in data and 'humidity' in data:
-		with lock:
-			cursor.append((
-				'INSERT INTO sensors (temperature, humidity) VALUES (?, ?)',
-				(data['temperature'], data['humidity'])
-			))
-	else:
-		return Response(400).json({
-			'status': 'error',
-			'error': 'Не полные данные'
-		})
-	return Response(200).json({
-		'status': 'ok'
-	})
 
-server.path('/test')(test_path)
-server.path('/esp/sensors')(esp_sensors_path)
+server.path('POST', '/api/esp/sensors')(esp_sens_path)
+server.path('GET', '/api/esp/command')(esp_gcmd_path)
+server.path('POST', '/api/esp/command')(esp_dcmd_path)
 server.start()

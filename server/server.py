@@ -2,48 +2,42 @@ from __future__ import annotations
 from typing import Callable
 from socket import socket as Socket, AF_INET, SOCK_STREAM
 from time import sleep
-import sqlite3
-from sqlite3 import Cursor
-from threading import RLock
 
 from .logging import info, warn
 from .threads import nonblocking
 from .request import Request
 from .response import Response
 from .data import Data
+from .database import DataBase
 
-
-CALLBACK_TYPE = Callable[[Data, Request], Response]
+CALLBACK_TYPE = Callable[['Server', Request], Response]
 
 class Server:
 	data: Data
 	host: str
 	port: int
 	socket: Socket
-	paths: dict[str, CALLBACK_TYPE]
-	func: Callable[[], None]
+	paths: dict[str, dict[str, CALLBACK_TYPE]]
+	database: DataBase | None
 
 	def __init__(self,
 		data: Data,
 		host: str = '0.0.0.0',
 		port: int = 5000,
-		db_path: str = 'main.db',
-		main: Callable[[], None] | None = None
+		database: DataBase | None = None,
 	) -> None:
 		self.data = data
-		self.data.cursor = list()
-		self.data.cursor_lock = RLock()
+		self.database = database
 		self.paths = dict()
 		self.host = host
 		self.port = port
-		self.db_conn = sqlite3.connect(db_path, isolation_level=None)
-		self.db_curs = self.db_conn.cursor()
-		self.func = main if main else (lambda: None)
 
 	# используется для добавления обработчика на путь
-	def path(self, path: str) -> Callable[[CALLBACK_TYPE], None]:
+	def path(self, method: str, path: str) -> Callable[[CALLBACK_TYPE], None]:
 		def wrapper(func: CALLBACK_TYPE):
-			self.paths[path] = func
+			if path not in self.paths:
+				self.paths[path] = dict()
+			self.paths[path][method] = func
 		return wrapper
 		
 	@nonblocking
@@ -65,31 +59,44 @@ class Server:
 			try:
 				req = Request.from_socket(client)
 			except TimeoutError, ConnectionResetError:
-				info(f'Отключение: {ip}:{port}')
 				running = False
 				continue
 			except:
 				raise
 
-			if req is None: 
-				warn(f'Запрос не верный для HTTP, отключение: {ip}:{port}')
+			if req is None:
 				running = False
+				warn(f'Неверный HTTP: {ip}:{port}')
+				client.send(Response(400).to_bytes())
 				continue
-
-			if req.path in self.paths:
-				res = self.paths[req.path](self.data, req)
-			else:
-				res = Response(404).text("404: Страница не найдена")
-			client.send(res.to_bytes())
 
 			if req.headers['Connection'] == 'close':
 				running = False
 			elif req.headers['Connection'] == 'keep-alive':
 				client.settimeout(60.0)
+
+			if req.path not in self.paths:
+				client.send(Response(404)
+					.text("404: Страница не найдена")
+					.header('Connection', 'keep-alive' if running else 'close')
+					.to_bytes())
+				continue
+
+			if req.method not in self.paths[req.path]:
+				client.send(Response(400)
+					.header('Connection', 'keep-alive' if running else 'close')
+					.to_bytes())
+				continue
+	
+			res = self.paths[req.path][req.method](self, req)
+			res.header('Connection', 'keep-alive' if running else 'close')
+			client.send(res.to_bytes())
+
+		info(f'Отключение: {ip}:{port}')
 		client.close()
 
 	def start(self) -> None:
-		info('Запуск приложения')
+		info('Запуск сервера')
 		self.socket: Socket = Socket(AF_INET, SOCK_STREAM)
 		self.socket.bind((self.host, self.port))
 		self.socket.listen()
@@ -97,16 +104,12 @@ class Server:
 
 		try:
 			while True:
-				if len(self.data.cursor) == 0:
-					sleep(0.1)
-				else:
-					with self.data.cursor_lock:
-						self.db_curs.execute(*self.data.cursor.pop(0))
+				if self.database is not None and self.database.update():
+					continue
+				sleep(0.5)
 		except KeyboardInterrupt:
 			info("Принудительная остановка сервера")
+			if self.database is not None:
+				self.database.close()
 		except:
 			raise
-
-	def main(self, main: Callable[[], None]) -> Server:
-		self.func = main
-		return self

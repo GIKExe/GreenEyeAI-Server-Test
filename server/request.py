@@ -66,7 +66,10 @@ class Request:
 		return self
 	
 	def get_json(self) -> Any:
-		return json.loads(self.data)
+		try:
+			return json.loads(self.data)
+		except:  # noqa: E722
+			return None
 	
 	def get_http_body(self) -> str:
 		line: str = ' '.join([self.method, self.path, self.version])

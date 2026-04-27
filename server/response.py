@@ -8,7 +8,11 @@ class Response:
   data: bytes
   headers: dict[str, str]
 
-  def __init__(self, status: int = 200, headers: dict[str, str] | None = None, data: bytes | None = None):
+  def __init__(self,
+    status: int = 200,
+    headers: dict[str, str] | None = None,
+    data: bytes | None = None
+  ) -> None:
     self.status = status
 
     self.headers = {
@@ -23,6 +27,10 @@ class Response:
     self.data = b''
     if data is not None:
       self.data = data
+
+  def header(self, name: str, value: str) -> Response:
+    self.headers[name] = value
+    return self
 
   def text(self, data: str) -> Response:
     self.headers['Content-Type'] = 'text/html; charset=utf-8'

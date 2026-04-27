@@ -5,8 +5,8 @@ from datetime import datetime
 def now() -> str:
 	now = datetime.now()
 	milliseconds = now.microsecond // 1000
-	formatted_time = now.strftime(r'%Y.%m.%d  %H:%M:%S')
-	return f"{formatted_time}:{milliseconds:03d}"
+	formatted_time = now.strftime(r'%Y.%m.%d %H:%M:%S')
+	return f"{formatted_time}.{milliseconds:03d}"
 
 
 @wraps(print)

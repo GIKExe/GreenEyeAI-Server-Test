@@ -10,15 +10,28 @@ socket = Socket()
 socket.connect(('localhost', 5000))
 socket.settimeout(None)
 
-req = Request('POST', '/esp/sensors')
+temperature = randint(-3300, 6000) / 100
+humidity = randint(0, 10000) / 100
+
+req = Request('POST', '/api/esp/sensors')
 req.headers['Connection'] = 'keep-alive'
 while True:
+  temperature += randint(-20, 20) / 10
+  humidity += randint(-50, 50) / 10
+
+  if humidity < 0:
+    humidity = 0
+  if humidity > 100:
+    humidity = 100
+  if temperature < -273:
+    temperature = -273
+
   data = {
-    'temperature': randint(-3300, 6000) / 100,
-    'humidity': randint(0, 10000) / 100
+    'temperature': temperature,
+    'humidity': humidity
   }
   req.json(data)
   socket.send(req.to_bytes())
   info('Отправлено:', data)
   res = Request.from_socket(socket)
-  sleep(10)
+  sleep(5)
