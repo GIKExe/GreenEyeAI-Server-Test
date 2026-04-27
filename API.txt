@@ -8,23 +8,25 @@ GET /api/plants?status=unhealthy
 
 
 {
-	"plants": [
-		{
-			"plant_id": 1,
-			"position": 1,
-			"status": "unhealthy",
-			"last_update": "2026-04-22T12:00:01"
-		}
-	]
+    "plants": [
+        {
+            "plant_id": 1,
+            "position": 1,
+            "status": "unhealthy",
+            "last_update": "2026-04-22T12:00:01"
+        }
+    ]
 }
 
 \\статусы: healthy, unhealthy, warning, critical
+\\position берётся из словаря позиций (хранится в формате: 1: {"x": 100, "y": 200, "width": 300, "height": 300}, 2: {"x": 450, "y": 200, "width": 300, "height": 300}, 3: {"x": 800, "y": 200, "width": 300, "height": 300}, ...)
+
 
 \\растений нет:
 
 
 {
-	"plants": []
+    "plants": []
 }
 
 1.2 Получение статуса растений с диагнозом
@@ -34,15 +36,15 @@ GET /api/plants/status
 
 
 {
-	"plants": [
-		{
-			"plant_id": 1,
-			"position": 1,
-			"diagnosis": "healthy",
-			"last_diagnosis_at": "2026-04-22T10:00:00",
-			"photo_url": "/data/crop_photos/plant_1_20260422_100000.jpg"
-		}
-	]
+    "plants": [
+        {
+            "plant_id": 1,
+            "position": 1,
+            "diagnosis": "healthy",
+            "last_diagnosis_at": "2026-04-22T10:00:00",
+            "photo_url": "/data/crop_photos/plant_1_20260422_100000.jpg"
+        }
+    ]
 }
 
 1.3 Получение истории показаний 
@@ -54,18 +56,18 @@ GET /api/readings
 
 
 {
-	"readings": [
-		{
-			"id": 1,
-			"plant_id": 1,
-			"temperature": 23.5,
-			"humidity": 65,
-			"diagnosis": "healthy",
-			"confidence": 0.95,
-			"image_url": "/data/crop_photos/plant_1_20260422_100000.jpg",
-			"created_at": "2026-04-22T12:00:01"
-		}
-	]
+    "readings": [
+        {
+            "id": 1,
+            "plant_id": 1,
+            "temperature": 23.5,
+            "humidity": 65,
+            "diagnosis": "healthy",
+            "confidence": 0.95,
+            "image_url": "/data/crop_photos/plant_1_20260422_100000.jpg",
+            "created_at": "2026-04-22T12:00:01"
+        }
+    ]
 }
 
 1.4 Получение статуса для гостевой страницы
@@ -75,10 +77,10 @@ GET /api/guest/status
 
 json
 {
-	"temperature": 23.5,
-	"humidity": 65,
-	"mode": "auto",
-	"uptime": 3600
+    "temperature": 23.5,
+    "humidity": 65,
+    "mode": "auto",
+    "uptime": 3600
 }
 
 1.5 Получение данных для графиков
@@ -89,9 +91,9 @@ GET /api/graph/sensors?period=day
 
 
 {
-	"labels": ["2026-04-15", "2026-04-16", "2026-04-17"],
-	"temperature": [22.1, 23.5, 24.0],
-	"humidity": [60, 65, 62]
+    "labels": ["2026-04-15", "2026-04-16", "2026-04-17"],
+    "temperature": [22.1, 23.5, 24.0],
+    "humidity": [60, 65, 62]
 }
 1.6 Получение текущего режима
 
@@ -101,7 +103,7 @@ GET /api/mode
 
 
 {
-	"mode": "auto"
+    "mode": "auto"
 }
 
 1.7 Получение расписаний
@@ -111,15 +113,15 @@ GET /api/schedules
 
 
 {
-	"light": [
-		{"start": "08:00", "end": "20:00"}
-	],
-	"fan": [
-		{"interval_hours": 2, "duration_minutes": 5}
-	],
-	"water": [
-		{"interval_hours": 6, "duration_minutes": 2}
-	]
+    "light": [
+        {"start": "08:00", "end": "20:00"}
+    ],
+    "fan": [
+        {"interval_hours": 2, "duration_minutes": 5}
+    ],
+    "water": [
+        {"interval_hours": 6, "duration_minutes": 2}
+    ]
 }
 
 2. ФРОНТ -> СЕРВЕР
@@ -134,9 +136,9 @@ POST /api/command/water
 
 
 {
-	"status": "ok",
-	"message": "Watering started",
-	"state": "on"
+    "status": "ok",
+    "message": "Watering started",
+    "state": "on"
 }
 
 2.2 Управление светом
@@ -150,9 +152,9 @@ POST /api/command/light
 
 
 {
-	"status": "ok",
-	"message": "Light turned on",
-	"state": "on"
+    "status": "ok",
+    "message": "Light turned on",
+    "state": "on"
 }
 
 2.3 Управление вентилятором
@@ -167,9 +169,9 @@ POST /api/command/fan
 
 
 {
-	"status": "ok",
-	"message": "Fan turned on",
-	"state": "on"
+    "status": "ok",
+    "message": "Fan turned on",
+    "state": "on"
 }
 
 2.4 Авторизация админа
@@ -178,16 +180,16 @@ POST /api/admin/login
 
 
 {
-	"username": "admin",
-	"password": "password123"
+    "username": "admin",
+    "password": "password123"
 }
 Ответ:
 
 
 {
-	"status": "ok",
-	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-	"expires_in": 86400
+    "status": "ok",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 86400
 }
 
 2.5 Установка режима
@@ -200,8 +202,8 @@ POST /api/mode
 
 
 {
-	"status": "ok",
-	"mode": "auto"
+    "status": "ok",
+    "mode": "auto"
 }
 2.6 Сохранение расписаний
 
@@ -209,16 +211,16 @@ POST /api/schedules
 
 
 {
-	"light": [{"start": "08:00", "end": "20:00"}],
-	"fan": [{"interval_hours": 2, "duration_minutes": 5}],
-	"water": [{"interval_hours": 6, "duration_minutes": 2}]
+    "light": [{"start": "08:00", "end": "20:00"}],
+    "fan": [{"interval_hours": 2, "duration_minutes": 5}],
+    "water": [{"interval_hours": 6, "duration_minutes": 2}]
 }
 Ответ:
 
 
 {
-	"status": "ok",
-	"message": "Schedules saved"
+    "status": "ok",
+    "message": "Schedules saved"
 }
 
 2.7 Очистка фото больных растений
@@ -229,11 +231,17 @@ POST /api/admin/cleanup/sick_plants
 {"days": 30}
 Ответ:
 
-json
 {
-	"status": "ok",
-	"deleted_count": 15,
-	"message": "Deleted 15 old sick plant photos"
+    "status": "ok",
+    "deleted_count": 15,
+    "message": "Deleted 15 old sick plant photos"
+}
+
+2.8 Сделать фото
+
+POST/api/admin/make_photo
+{
+	"admin": "=A%SSFWEDX"
 }
 
 3. СТАТУС СЕРВЕРА
@@ -243,77 +251,85 @@ GET /api/status
 
 
 {
-	"status": "online",
-	"uptime": 3600,
-	"db_status": "connected"
+    "status": "online",
+    "uptime": 3600,
+    "db_status": "connected"
 }
 
 
 
-
-
-WebSocket подключение
-
-ws://<server_ip>:8000/ws/esp?device_id=esp_01
-
-Форматы сообщений (все через один WebSocket)
 
 1. ESP -> Сервер (показания датчиков)
-
+POST /api/esp/sensors
 {
-	"type": "sensors",
-	"temperature": 23.5,
-	"humidity": 65
+    "temperature": 23.5,
+    "humidity": 65
 }
 
-2. ESP -> Сервер (подтверждение команды)
+2. ESP -> Сервер (запрос команд)
+GET /api/esp/get_command
+**без тела запроса
 
+3. Сервер -> ESP (команда)
 {
-	"type": "command_ack",
-	"command_id": 123,
-	"status": "executed"
-}
-3. ESP -> Сервер (запрос команд)
-
-{
-	"type": "get_commands"
-}
-
-4. Сервер -> ESP (команда)
-
-{
-	"type": "command",
-	"command_id": 123,
-	"device": "light",
-	"action": "on"
+    "queue_size": 3,
+    "command_id": 123,
+    "device": "light",
+    "action": "on"
 }
 
-5. Сервер -> ESP (ответ на запрос команд)
+если нет команд, то "device": "None".
 
+4. ESP -> Сервер (подтверждение команды)
+POST /api/esp/command_ask
 {
-	"type": "commands_list",
-	"commands": [
-		{"id": 1, "type": "light_on", "params": {}},
-		{"id": 2, "type": "fan_off", "params": {}},
-		{"id": 3, "type": "water_on", "params": {"duration": 30}}
-	]
+    "command_id": 123,
+    "status": "executed"
 }
-
 
 Полная схема общения
 
-ESP → Сервер: {"type": "get_commands"}
-Сервер → ESP: {"type": "commands_list", "commands": [...]}
+ESP → Сервер: {"temperature": 23.5, "humidity": 65}
 
-ESP → Сервер: {"type": "sensors", "temperature": 23.5, "humidity": 65}
+ESP → Сервер: GET /api/esp/get_command
 
-ESP → Сервер: {"type": "command_ack", "command_id": 123, "status": "executed"}
+Сервер → ESP: {"command_id": 123, "device": "light", "action": "on"}
 
+ESP → Сервер: {"command_id": 123, "status": "executed"}
+
+
+
+
+
+
+!!!!! Сервер отправляет фото в ML модель
+
+Сервер -> ML модель (HTTP POST):
+
+POST
+http://ml_model:5001/analyze
+{
+    "image_id": "plant_1_20260422_120001.jpg",
+    "image_base64": "/9j/4AAQSkZJRg...",
+}
+
+
+
+ML модель -> Сервер (HTTP POST):
+
+
+
+POST http://server:8000/api/ml/result
+{
+    "image_id": "plant_1_20260422_120001.jpg",
+    "diagnosis": "healthy",
+    "confidence": 0.95
+}
 
 
 
 DEVICE_MAPPING
 
 DEVICE_MAPPING = {
-	"AA:BB:CC:DD:EE:FF": {"id": "esp_01", "shelf": 1},
+    "AA:BB:CC:DD:EE:FF": {"id": "esp_01", "shelf": 1},
 }
