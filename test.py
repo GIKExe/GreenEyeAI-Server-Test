@@ -3,7 +3,7 @@ from random import randint
 
 from server.inet import Socket
 from server.request import Request
-
+from server.data import Data
 
 socket = Socket()
 socket.connect(('localhost', 5000))

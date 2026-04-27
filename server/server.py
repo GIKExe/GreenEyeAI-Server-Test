@@ -7,11 +7,13 @@ from .logging import info, warn
 from .threads import nonblocking
 from .request import Request
 from .response import Response
+from .data import Data
 
 
-CALLBACK_TYPE = Callable[[Request], Response]
+CALLBACK_TYPE = Callable[[Data, Request], Response]
 
 class Server:
+	data: Data
 	host: str
 	port: int
 	socket: Socket
@@ -19,10 +21,12 @@ class Server:
 	func: Callable[[], None]
 
 	def __init__(self,
+		data: Data,
 		host: str = '0.0.0.0',
 		port: int = 5000,
 		main: Callable[[], None] | None = None
 	) -> None:
+		self.data = data
 		self.paths = dict()
 		self.host = host
 		self.port = port
@@ -65,7 +69,7 @@ class Server:
 				continue
 
 			if req.path in self.paths:
-				res = self.paths[req.path](req)
+				res = self.paths[req.path](self.data, req)
 			else:
 				res = Response(404).text("404: Страница не найдена")
 			client.send(res.to_bytes())
