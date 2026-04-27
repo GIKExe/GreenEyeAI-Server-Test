@@ -1,7 +1,10 @@
 from __future__ import annotations
+from typing import Callable
 from socket import socket as Socket, AF_INET, SOCK_STREAM
 from time import sleep
-from typing import Callable
+import sqlite3
+from sqlite3 import Cursor
+from threading import RLock
 
 from .logging import info, warn
 from .threads import nonblocking
@@ -24,12 +27,17 @@ class Server:
 		data: Data,
 		host: str = '0.0.0.0',
 		port: int = 5000,
+		db_path: str = 'main.db',
 		main: Callable[[], None] | None = None
 	) -> None:
 		self.data = data
+		self.data.cursor = list()
+		self.data.cursor_lock = RLock()
 		self.paths = dict()
 		self.host = host
 		self.port = port
+		self.db_conn = sqlite3.connect(db_path, isolation_level=None)
+		self.db_curs = self.db_conn.cursor()
 		self.func = main if main else (lambda: None)
 
 	# используется для добавления обработчика на путь
@@ -89,7 +97,11 @@ class Server:
 
 		try:
 			while True:
-				sleep(1)
+				if len(self.data.cursor) == 0:
+					sleep(0.1)
+				else:
+					with self.data.cursor_lock:
+						self.db_curs.execute(*self.data.cursor.pop(0))
 		except KeyboardInterrupt:
 			info("Принудительная остановка сервера")
 		except:
