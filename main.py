@@ -13,6 +13,7 @@ data.commands_lock = Lock()
 data.mode = 'manual' # или auto
 data.mode_lock = Lock()
 
+
 database = DataBase('main.db')
 database.execute('''
 	CREATE TABLE IF NOT EXISTS sensors (

@@ -21,3 +21,5 @@ def web_smod_path(server: Server, req: Request) -> Response:
 	return Response(200)
 
 
+def web_gidx_path(server: Server, req: Request) -> Response:
+	...

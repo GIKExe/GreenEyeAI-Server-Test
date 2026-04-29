@@ -1,3 +1,4 @@
+from __future__ import annotations
 from os import listdir
 from time import time
 from os.path import getmtime, isdir, isfile, join
@@ -77,12 +78,12 @@ class Dir(dict):
 	# def __contains__(self, key: str) -> bool:
 	# 	return key in self
 			
-	def check(self) -> Dir:
+	def check(self) -> None:
 		if time() - self.check_time < 5:
-			return self
+			return
 		if not isdir(self.path):
 			self.exists = False
-			return self
+			return
 
 		name: str
 		obj: Dir | File
@@ -96,7 +97,8 @@ class Dir(dict):
 		new_time = getmtime(self.path)
 		if self.time != new_time:
 			for name in listdir(self.path):
-				if name in self.keys(): continue
+				if name in self.keys():
+					continue
 				path = join(self.path, name)
 				if isdir(path):
 					self[name] = Dir(path)
@@ -104,16 +106,19 @@ class Dir(dict):
 					self[name] = File(path)
 			self.time = new_time
 		self.check_time = time()
-		return self
+		return
 	
-	def display(self, tab: str = '', func: Callable[..., None] = print) -> Dir:
+	def display(self, tab: str = '', add: str | None = '  ', func: Callable[..., None] = print) -> None:
+		'''аргумсент add позволяет задать добавляемый отступ во вложенных директориях, 
+		но если он задан как None то функция отображает полные пути до файлов.'''
 		for k,v in self.items():
-			func(tab+k)
-			if type(v) is Dir:
-				v.display(tab+'  ', func)
-		return self
+			if (type(v) is File) or (add is not None):
+				func(tab+k)
+			if type(v) is not Dir:
+				continue
+			v.display(tab+(k+'/' if add is None else add), add, func)
 
 
 if __name__ == "__main__":
 	d = Dir('./')
-	d.display()
+	d.display(add=None)

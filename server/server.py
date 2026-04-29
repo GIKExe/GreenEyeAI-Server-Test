@@ -14,17 +14,17 @@ CALLBACK_TYPE = Callable[['Server', Request], Response]
 
 class Server:
 	data: Data
+	database: DataBase
 	host: str
 	port: int
 	socket: Socket
 	paths: dict[str, dict[str, CALLBACK_TYPE]]
-	database: DataBase | None
-
+	
 	def __init__(self,
 		data: Data,
+		database: DataBase,
 		host: str = '0.0.0.0',
 		port: int = 5000,
-		database: DataBase | None = None,
 	) -> None:
 		self.data = data
 		self.database = database
@@ -107,7 +107,9 @@ class Server:
 
 		try:
 			while True:
-				if self.database is not None and self.database.update():
+				# if self.database is not None:
+				# 	continue
+				if self.database.update():
 					continue
 				sleep(0.5)
 		except KeyboardInterrupt:
