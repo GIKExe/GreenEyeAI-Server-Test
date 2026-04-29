@@ -2,9 +2,11 @@ from threading import Lock
 
 from server import Server, Request, Response
 from server import Data, DataBase
+from server.cluster import Cluster
+from server.logging import error
 
 from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
-from web_paths import web_gmod_path, web_smod_path
+from web_paths import web_gmod_path, web_smod_path, web_gidx_path, web_gadm_path
 
 
 data = Data() # общие переменные и тд
@@ -41,7 +43,11 @@ database.execute('''
 ''')
 
 
-server = Server(data, database=database)
+cluster = Cluster('site')
+if cluster is None:
+	error('Кластер повреждён!')
+	exit()
+server = Server(data, database, cluster)
 
 
 @server.path('GET', '/me')
@@ -53,6 +59,9 @@ server.path('POST', '/api/esp/sensors')(esp_sens_path)
 server.path('GET', '/api/esp/command')(esp_gcmd_path)
 server.path('POST', '/api/esp/command')(esp_dcmd_path)
 
-server.path('GET', '/api/web/mode')(web_gmod_path)
+server.path('GET',  '/api/web/mode')(web_gmod_path)
 server.path('POST', '/api/web/mode')(web_smod_path)
+server.path('GET',  '/'            )(web_gidx_path)
+server.path('GET',  '/admin.html'  )(web_gadm_path)
+server.path('GET',  '/admin'       )(web_gadm_path)
 server.start()

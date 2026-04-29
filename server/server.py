@@ -3,18 +3,21 @@ from typing import Callable
 from socket import socket as Socket, AF_INET, SOCK_STREAM
 from time import sleep
 
-from .logging import info, warn
+from .logging import info, warn, error
 from .threads import nonblocking
 from .request import Request
 from .response import Response
 from .data import Data
 from .database import DataBase
+from .cluster import Cluster, File
+
 
 CALLBACK_TYPE = Callable[['Server', Request], Response]
 
 class Server:
 	data: Data
 	database: DataBase
+	cluster: Cluster
 	host: str
 	port: int
 	socket: Socket
@@ -23,11 +26,13 @@ class Server:
 	def __init__(self,
 		data: Data,
 		database: DataBase,
+		cluster: Cluster,
 		host: str = '0.0.0.0',
 		port: int = 5000,
 	) -> None:
 		self.data = data
 		self.database = database
+		self.cluster = cluster
 		self.paths = dict()
 		self.host = host
 		self.port = port
@@ -79,6 +84,15 @@ class Server:
 				running = False
 
 			if req.path not in self.paths:
+				if req.path in self.cluster:
+					obj = self.cluster[req.path]
+					if type(obj) is File:
+						client.send(Response(200)
+							.bytes(obj.read())
+							.header('Connection', 'keep-alive' if running else 'close')
+							.to_bytes())
+						continue
+				
 				client.send(Response(404)
 					.text("404: Страница не найдена")
 					.header('Connection', 'keep-alive' if running else 'close')
@@ -107,14 +121,17 @@ class Server:
 
 		try:
 			while True:
-				# if self.database is not None:
-				# 	continue
+				if not self.cluster.update():
+					error('Кластер повреждён!')
+					break
 				if self.database.update():
 					continue
 				sleep(0.5)
+			error('Аварийная остановка сервера!')
 		except KeyboardInterrupt:
 			info("Принудительная остановка сервера")
 			if self.database is not None:
 				self.database.close()
 		except:
+			error('Аварийная остановка сервера!')
 			raise

@@ -32,6 +32,10 @@ class Response:
 	def header(self, name: str, value: str) -> Response:
 		self.headers[name] = value
 		return self
+	
+	def bytes(self, data: bytes) -> Response:
+		self.data = data
+		return self
 
 	def text(self, data: str) -> Response:
 		self.headers['Content-Type'] = 'text/html; charset=utf-8'
