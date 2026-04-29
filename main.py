@@ -15,15 +15,21 @@ database.execute('''
 	CREATE TABLE IF NOT EXISTS sensors (
 		temperature FLOAT NOT NULL,
 		humidity FLOAT NOT NULL
-	);
+	)
+''')
+database.execute('''
 	CREATE TABLE IF NOT EXISTS light (
 		timestamp TIMESTAMP NOT NULL,
 		state BOOLEAN NOT NULL
-	);
+	)
+''')
+database.execute('''
 	CREATE TABLE IF NOT EXISTS water (
 		timestamp TIMESTAMP NOT NULL,
 		state BOOLEAN NOT NULL
-	);
+	)
+''')
+database.execute('''
 	CREATE TABLE IF NOT EXISTS fan (
 		timestamp TIMESTAMP NOT NULL,
 		state BOOLEAN NOT NULL
