@@ -69,11 +69,14 @@ class Server:
 				warn(f'Неверный HTTP: {ip}:{port}')
 				client.send(Response(400).to_bytes())
 				continue
-
-			if req.headers['Connection'] == 'close':
+			
+			if 'Connection' in req.headers:
+				if req.headers['Connection'] == 'keep-alive':
+					client.settimeout(60.0)
+				else:
+					running = False
+			else:
 				running = False
-			elif req.headers['Connection'] == 'keep-alive':
-				client.settimeout(60.0)
 
 			if req.path not in self.paths:
 				client.send(Response(404)

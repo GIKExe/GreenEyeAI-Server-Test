@@ -58,8 +58,16 @@ class Request:
 				if (len(req.data) >= size):
 					break
 				req.data += client.recv(size - len(req.data))
-	
 		return req
+	
+	def header(self, name: str, value: str) -> Request:
+		self.headers[name] = value
+		return self
+	
+	def text(self, data: str) -> Request:
+		self.headers['Content-Type'] = 'text/html; charset=utf-8'
+		self.data = data.encode('utf8')
+		return self
 	
 	def json(self, data: dict | list) -> Request:
 		self.headers['Content-Type'] = 'application/json'
@@ -85,3 +93,6 @@ class Request:
 		if len(self.data) > 0:
 			self.headers['Content-Length'] = str(len(self.data))
 		return self.to_body().encode('ascii') + self.data
+	
+	def to_socket(self, sock: Socket) -> None:
+		sock.send(self.to_bytes())

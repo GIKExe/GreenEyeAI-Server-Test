@@ -1,14 +1,17 @@
 from threading import Lock
 
 from server import Server, Request, Response
-from server import Data, DataBase, Dir, File
+from server import Data, DataBase
 
 from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
+from web_paths import web_gmod_path, web_smod_path
 
 
 data = Data() # общие переменные и тд
 data.commands = list()
 data.commands_lock = Lock()
+data.mode = 'manual' # или auto
+data.mode_lock = Lock()
 
 database = DataBase('main.db')
 database.execute('''
@@ -48,4 +51,7 @@ def me_path(server: Server, req: Request) -> Response:
 server.path('POST', '/api/esp/sensors')(esp_sens_path)
 server.path('GET', '/api/esp/command')(esp_gcmd_path)
 server.path('POST', '/api/esp/command')(esp_dcmd_path)
+
+server.path('GET', '/api/web/mode')(web_gmod_path)
+server.path('POST', '/api/web/mode')(web_smod_path)
 server.start()

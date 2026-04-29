@@ -1,37 +1,38 @@
-from time import sleep
-from random import randint 
+from time import sleep  # noqa: F401
 
 from server.inet import Socket
 from server.request import Request
-from server.logging import info
+from server.logging import info, warn
 
 
 socket = Socket()
 socket.connect(('localhost', 5000))
 socket.settimeout(None)
 
-temperature = randint(-3300, 6000) / 100
-humidity = randint(0, 10000) / 100
+req = Request('GET', '/api/web/mode')
+req.header('Connection', 'keep-alive')
+req.to_socket(socket)
+req = Request.from_socket(socket)
+if req is None:
+	warn('1 Входящий запрос неверный')
+	exit()
+info(req.to_text())
 
-req = Request('POST', '/api/esp/sensors')
-req.headers['Connection'] = 'keep-alive'
-while True:
-  temperature += randint(-20, 20) / 10
-  humidity += randint(-50, 50) / 10
+req = Request('POST', '/api/web/mode')
+req.header('Connection', 'keep-alive')
+req.json({'mode': 'manual'})
+req.to_socket(socket)
+req = Request.from_socket(socket)
+if req is None:
+	warn('2 Входящий запрос неверный')
+	exit()
+info(req.to_text())
 
-  if humidity < 0:
-    humidity = 0
-  if humidity > 100:
-    humidity = 100
-  if temperature < -273:
-    temperature = -273
-
-  data = {
-    'temperature': temperature,
-    'humidity': humidity
-  }
-  req.json(data)
-  socket.send(req.to_bytes())
-  info('Отправлено:', data)
-  res = Request.from_socket(socket)
-  sleep(5)
+req = Request('GET', '/api/web/mode')
+req.header('Connection', 'close')
+req.to_socket(socket)
+req = Request.from_socket(socket)
+if req is None:
+	warn('3 Входящий запрос неверный')
+	exit()
+info(req.to_text())
