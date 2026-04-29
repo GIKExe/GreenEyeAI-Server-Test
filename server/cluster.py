@@ -3,6 +3,7 @@ from time import time
 from os import listdir, sep
 from os.path import exists, isfile, isdir, getsize, join, getmtime
 
+from .logging import info
 from .inet import MiB, Konvert
 __all__ = ['File', 'Dir', 'Cluster']
 
@@ -136,7 +137,7 @@ class Cluster:
 		return self.paths[opath].data
 			
 	def init(self):
-		print(f'Загрузка кластера: "{self.name}"')
+		info(f'Загрузка кластера: "{self.name}"')
 		self.update()
 		self.print_ram()
 
@@ -147,9 +148,9 @@ class Cluster:
 		file.opath = self.create_opath(file.path)
 		self.paths[file.opath] = file
 		if self.ram + file.size > self.ram_limit:
-			return print(f'ADD 0 {file.opath}')
+			return info(f'ADD 0 {file.opath}')
 		file.cached = True
-		print(f'ADD 1 {file.opath} +{Konvert(file.ram)}')
+		info(f'ADD 1 {file.opath} +{Konvert(file.ram)}')
 
 	def change(self, file, opath, size, old_size, log=True):
 		ram = self.ram
@@ -157,16 +158,16 @@ class Cluster:
 		if ram - old_size + size <= self.ram_limit:
 			difference = size - old_size
 			text = ('-' if difference < 0 else '+')+Konvert(abs(difference))
-			print(f'MOD 1 {opath} {text}')
+			info(f'MOD 1 {opath} {text}')
 			return True
-		print(f'MOD 0 {opath} {text}')
+		info(f'MOD 0 {opath} {text}')
 		return False
 		
 	def remove(self, opath):
 		del self.paths[opath]
-		print(f'REM - {opath}')
+		info(f'REM - {opath}')
 
 	def print_ram(self):
 		ram = self.ram
-		print(f'{Konvert(ram)}/{Konvert(self.ram_limit)}, {ram/self.ram_limit*100:.2f}%')
+		info(f'{Konvert(ram)}/{Konvert(self.ram_limit)}, {ram/self.ram_limit*100:.2f}%')
 
