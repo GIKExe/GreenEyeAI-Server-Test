@@ -4,6 +4,7 @@ from socket import socket as Socket, MSG_PEEK
 import json
 
 from .inet import KiB
+__all__ = ['Request']
 
 
 class Request:
@@ -71,16 +72,16 @@ class Request:
 		except:  # noqa: E722
 			return None
 	
-	def get_http_body(self) -> str:
+	def to_body(self) -> str:
 		line: str = ' '.join([self.method, self.path, self.version])
 		return '\r\n'.join([line,] + [f'{k}: {v}' for k, v in self.headers.items()]) + '\r\n\r\n'
 	
-	def to_str(self) -> str:
+	def to_text(self) -> str:
 		if len(self.data) > 0:
 			self.headers['Content-Length'] = str(len(self.data))
-		return self.get_http_body() + self.data.decode('utf8')
+		return self.to_body() + self.data.decode('utf8')
 	
 	def to_bytes(self) -> bytes:
 		if len(self.data) > 0:
 			self.headers['Content-Length'] = str(len(self.data))
-		return self.get_http_body().encode('ascii') + self.data
+		return self.to_body().encode('ascii') + self.data

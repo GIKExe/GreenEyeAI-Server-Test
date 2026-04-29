@@ -1,7 +1,7 @@
 from threading import Lock
 
 from server import Server, Request, Response
-from server import Data, DataBase
+from server import Data, DataBase, Dir, File
 
 from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 
@@ -21,14 +21,9 @@ database.execute('''
 server = Server(data, database=database)
 
 
-@server.path('GET', '/')
-def index_path(server: Server, req: Request) -> Response:
-	return Response(200).text('Домашняя страничка')
-
-
 @server.path('GET', '/me')
 def me_path(server: Server, req: Request) -> Response:
-	return Response(200).text(req.get_http_body().replace('\r\n', '<br>'))
+	return Response(200).text(req.to_body().replace('\r\n', '<br>'))
 
 
 server.path('POST', '/api/esp/sensors')(esp_sens_path)
