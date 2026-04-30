@@ -14,6 +14,32 @@ from .cluster import Cluster, File
 
 CALLBACK_TYPE = Callable[['Server', Request], Response]
 
+
+def get_content_type(path: str) -> str:
+	end = '' 
+	if '.' in path:
+		end = path.rsplit('.', 1)[1]
+	content_type = 'text/plain'
+	match end:
+		case 'css':
+			content_type = 'text/css'
+		case 'html':
+			content_type = 'text/html; charset=utf-8'
+		case 'js':
+			content_type = 'application/javascript'
+		case 'jpg', 'jpeg':
+			content_type = 'image/jpeg'
+		case 'png':
+			content_type = 'image/png'
+		case 'webp':
+			content_type = 'image/webp'
+		case 'svg':
+			content_type = 'image/svg+xml'
+		case 'xml':
+			content_type = 'text/xml'
+	return content_type
+
+
 class Server:
 	data: Data
 	database: DataBase
@@ -85,24 +111,26 @@ class Server:
 
 			if req.path not in self.paths:
 				if req.path in self.cluster:
-					obj = self.cluster[req.path]
-					if type(obj) is File:
-						client.send(Response(200)
-							.bytes(obj.read())
-							.header('Connection', 'keep-alive' if running else 'close')
-							.to_bytes())
+					file = self.cluster[req.path]
+					if type(file) is File:
+						res = Response(200)
+						res.bytes(file.read())
+						res.header('Content-Type', get_content_type(file.path))
+						res.header('Connection', 'keep-alive' if running else 'close')
+						client.send(res.to_bytes())
 						continue
 				
-				client.send(Response(404)
-					.text("404: Страница не найдена")
-					.header('Connection', 'keep-alive' if running else 'close')
-					.to_bytes())
+				res = Response(404)
+				res.text("404: Страница не найдена")
+				res.header('Content-Type', 'text/html; charset=utf-8')
+				res.header('Connection', 'keep-alive' if running else 'close')
+				client.send(res.to_bytes())
 				continue
 
 			if req.method not in self.paths[req.path]:
-				client.send(Response(400)
-					.header('Connection', 'keep-alive' if running else 'close')
-					.to_bytes())
+				res = Response(400)
+				res.header('Connection', 'keep-alive' if running else 'close')
+				client.send(res.to_bytes())
 				continue
 	
 			res = self.paths[req.path][req.method](self, req)
@@ -111,6 +139,7 @@ class Server:
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()
+
 
 	def start(self) -> None:
 		info('Запуск сервера')

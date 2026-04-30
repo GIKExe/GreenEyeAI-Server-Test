@@ -18,9 +18,8 @@ class Response:
 
 		self.headers = {
 			'Connection': 'close',
-			'Content-Type': 'text/html; charset=utf-8',
-			'Content-Length' : '0'
 		}
+
 		if headers is not None:
 			for k,v in headers.items():
 				self.headers[k] = v
@@ -38,8 +37,16 @@ class Response:
 		return self
 
 	def text(self, data: str) -> Response:
-		self.headers['Content-Type'] = 'text/html; charset=utf-8'
+		self.headers['Content-Type'] = 'text/plain'
 		self.data = data.encode('utf8')
+		return self
+	
+	def html(self, data: str | bytes) -> Response:
+		self.header('Content-Type', 'text/html; charset=utf-8')
+		if type(data) is str:
+			self.data = data.encode('utf8')
+		elif type(data) is bytes:
+			self.data = data
 		return self
 
 	def json(self, data: dict | list) -> Response:
