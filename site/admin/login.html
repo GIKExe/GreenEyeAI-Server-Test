@@ -30,14 +30,48 @@
   <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> На главную</a>
 </div>
 <script>
-  const btn = document.getElementById('loginBtn'), errorDiv = document.getElementById('errorMsg');
-  btn.onclick = () => {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value.trim();
-    if(user === 'admin' && pass === 'admin123') {
-      sessionStorage.setItem('admin_logged', 'true');
-      window.location.href = '/admin';
-    } else errorDiv.style.display = 'block';
+  const btn = document.getElementById('loginBtn');
+  const errorDiv = document.getElementById('errorMsg');
+
+  btn.onclick = async () => {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    // Скрываем ошибку перед новой попыткой
+    errorDiv.style.display = 'none';
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const token = data.token; // Предполагаем, что сервер возвращает { "token": "..." }
+        const expires_in = data.expires_in;
+
+        // 1. Сохраняем токен в Cookies (срок действия 1 день)
+        document.cookie = `token=${token}; path=/; max-age=${expires_in}; SameSite=Strict`;
+
+        // 2. Опционально сохраняем флаг в sessionStorage для старой логики
+        sessionStorage.setItem('admin_logged', 'true');
+
+        // 3. Перенаправляем в панель управления
+        window.location.href = '/admin';
+      } else {
+        // Если сервер вернул 401 или другую ошибку
+        errorDiv.textContent = 'Неверный логин или пароль';
+        errorDiv.style.display = 'block';
+      }
+    } catch (err) {
+      console.error('Ошибка сети:', err);
+      errorDiv.textContent = 'Ошибка сервера. Попробуйте позже.';
+      errorDiv.style.display = 'block';
+    }
   };
 </script>
 </body>

@@ -524,7 +524,11 @@
   const burger = document.getElementById('burgerBtn'), sidebar = document.getElementById('sidebar'), overlay = document.getElementById('overlay');
   burger.onclick = () => { sidebar.classList.toggle('open'); burger.classList.toggle('open'); overlay.classList.toggle('active'); };
   overlay.onclick = () => { sidebar.classList.remove('open'); burger.classList.remove('open'); overlay.classList.remove('active'); };
-  document.getElementById('logoutBtn').onclick = () => { sessionStorage.removeItem('admin_logged'); window.location='admin_login.html'; };
+  document.getElementById('logoutBtn').onclick = () => {
+    sessionStorage.removeItem('admin_logged');
+    document.cookie = "token=; path=/; max-age=0; SameSite=Strict";
+    window.location='/admin/login';
+  };
 
   function startBackgroundTasks() {
     setInterval(() => {
@@ -548,7 +552,7 @@
     }, 30000);
   }
 
-  if(!sessionStorage.getItem('admin_logged')) window.location.href = 'admin_login.html';
+  // if(!sessionStorage.getItem('admin_logged')) window.location.href = 'admin_login.html';
   loadData();
   renderDashboard();
   syncCameras();
