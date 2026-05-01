@@ -24,9 +24,9 @@ def web_smod_path(server: Server, req: Request) -> Response:
 
 def web_gidx_path(server: Server, req: Request) -> Response:
 	if '/index.html' in server.cluster:
-		obj = server.cluster['/index.html']
-		if type(obj) is File:
-			return Response(200).bytes(obj.read())
+		file = server.cluster['/index.html']
+		if type(file) is File:
+			return Response(200).html(file.read())
 	return Response(404)
 
 
@@ -37,4 +37,13 @@ def web_gadm_path(server: Server, req: Request) -> Response:
 	# 		return Response(200).bytes(obj.read())
 
 	# типо проверку не прошли, перенаправим ка на логин
-	return Response(302).header('Location', '/admin/login.html')
+	return Response(302).header('Location', '/admin/login')
+
+
+def web_galn_path(server: Server, req: Request) -> Response:
+	path = '/admin/login.html'
+	if path in server.cluster:
+		file = server.cluster[path]
+		if type(file) is File:
+			return Response(200).html(file.read())
+	return Response(404)
