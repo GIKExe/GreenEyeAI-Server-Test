@@ -144,3 +144,20 @@ def web_paln_path(server: Server, req: Request) -> Response:
 		'token': server.data.token,
 		'expires_in': 86400
 	})
+
+
+def web_gdbr_path(server: Server, req: Request) -> Response:
+	# SELECT * FROM water
+	# WHERE timestamp >= unixepoch('now') - (120);
+	data = req.get_json()
+	if data is None:
+		return Response(400)
+	if 'table' not in data:
+		return Response(400)
+	if data['table'] not in ('water', 'light', 'fan'):
+		return Response(400)
+	table = data['table'] 
+	data = server.database.execute('SELECT * FROM '+table, mode=3)
+	if data is None:
+		return Response(400)
+	return Response(200).json(data)

@@ -1,3 +1,5 @@
+from time import time
+
 from server import Server, Request, Response
 from server.logging import info, warn, error  # noqa: F401
 
@@ -42,6 +44,10 @@ def esp_dcmd_path(server: Server, req: Request) -> Response:
 			return Response(400)
 		if data['id'] != commands[0][0]:
 			return Response(400)
-		del commands[0]
+		command_id, device, action = commands.pop(0)
+	server.database.execute(
+		f'INSERT INTO {device} (timestamp, state) VALUES (?, ?)',
+		(time(), True if action == 'on' else False)
+	)
 	info("Команда удалена")
 	return Response(200)

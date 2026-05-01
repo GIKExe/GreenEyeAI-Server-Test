@@ -10,6 +10,7 @@ from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 from web_paths import web_gmod_path, web_smod_path
 from web_paths import web_gidx_path, web_gadm_path, web_galn_path, web_paln_path
 from web_paths import web_acwr_path, web_aclt_path, web_acfn_path
+from web_paths import web_gdbr_path
 
 
 data = Data() # общие переменные и тд
@@ -30,19 +31,19 @@ database.execute('''
 ''')
 database.execute('''
 	CREATE TABLE IF NOT EXISTS light (
-		timestamp TIMESTAMP NOT NULL,
+		timestamp REAL NOT NULL,
 		state BOOLEAN NOT NULL
 	)
 ''')
 database.execute('''
 	CREATE TABLE IF NOT EXISTS water (
-		timestamp TIMESTAMP NOT NULL,
+		timestamp REAL NOT NULL,
 		state BOOLEAN NOT NULL
 	)
 ''')
 database.execute('''
 	CREATE TABLE IF NOT EXISTS fan (
-		timestamp TIMESTAMP NOT NULL,
+		timestamp REAL NOT NULL,
 		state BOOLEAN NOT NULL
 	)
 ''')
@@ -81,5 +82,6 @@ server.path('GET',  '/admin'            )(web_gadm_path)
 server.path('GET',  '/admin.html'       )(web_gadm_path)
 server.path('GET',  '/admin/login'      )(web_galn_path)
 server.path('POST', '/api/admin/login'  )(web_paln_path)
+server.path('GET',  '/api/web/db'       )(web_gdbr_path)
 
 server.start()

@@ -156,8 +156,6 @@ class Server:
 				if not self.cluster.update():
 					error('Кластер повреждён!')
 					break
-				if self.database.update():
-					continue
 				sleep(0.5)
 			error('Аварийная остановка сервера!')
 		except KeyboardInterrupt:
