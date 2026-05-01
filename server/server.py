@@ -89,7 +89,10 @@ class Server:
 		while running:
 			try:
 				req = Request.from_socket(client)
-			except TimeoutError, ConnectionResetError:
+			except TimeoutError:
+				running = False
+				continue
+			except ConnectionResetError:
 				running = False
 				continue
 			except:

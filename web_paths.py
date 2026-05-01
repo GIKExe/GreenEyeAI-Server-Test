@@ -47,6 +47,7 @@ def web_aclt_path(server: Server, req: Request) -> Response:
 		if len(commands) >= 10:
 			del commands[-1]
 		commands.append((randint(0, 65535), 'light', data['state']))
+	info("Команада добавлена")
 	return Response(200)
 	
 
@@ -69,6 +70,7 @@ def web_acwr_path(server: Server, req: Request) -> Response:
 		if len(commands) >= 10:
 			del commands[-1]
 		commands.append((randint(0, 65535), 'water', data['state']))
+	info("Команада добавлена")
 	return Response(200)
 
 
@@ -91,6 +93,7 @@ def web_acfn_path(server: Server, req: Request) -> Response:
 		if len(commands) >= 10:
 			del commands[-1]
 		commands.append((randint(0, 65535), 'fan', data['state']))
+	info("Команада добавлена")
 	return Response(200)
 
 

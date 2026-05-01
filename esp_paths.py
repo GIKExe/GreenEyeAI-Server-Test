@@ -1,4 +1,5 @@
 from server import Server, Request, Response
+from server.logging import info, warn, error  # noqa: F401
 
 
 def esp_sens_path(server: Server, req: Request) -> Response:
@@ -22,8 +23,8 @@ def esp_gcmd_path(server: Server, req: Request) -> Response:
 		if len(commands) > 0:
 			command_id, device, action = commands[0]
 	return Response(200).json({
-		"queue_size": len(commands),
-		"command_id": command_id,
+		"queue_size": len(commands) - 1,
+		"id": command_id,
 		"device": device,
 		"action": action
 	})
@@ -34,12 +35,13 @@ def esp_dcmd_path(server: Server, req: Request) -> Response:
 	data = req.get_json()
 	if data is None:
 		return Response(400)
-	if ('command_id' not in data) or ('status' not in data):
+	if ('id' not in data):
 		return Response(400)
 	with server.data.commands_lock:
 		if len(commands) == 0:
 			return Response(400)
-		if data['command_id'] != commands[0][0]:
+		if data['id'] != commands[0][0]:
 			return Response(400)
 		del commands[0]
+	info("Команда удалена")
 	return Response(200)
