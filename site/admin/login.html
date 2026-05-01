@@ -36,7 +36,7 @@
     const pass = document.getElementById('password').value.trim();
     if(user === 'admin' && pass === 'admin123') {
       sessionStorage.setItem('admin_logged', 'true');
-      window.location.href = 'admin.html';
+      window.location.href = '/admin';
     } else errorDiv.style.display = 'block';
   };
 </script>

@@ -55,6 +55,11 @@ def me_path(server: Server, req: Request) -> Response:
 	return Response(200).text(req.to_body().replace('\r\n', '<br>'))
 
 
+@server.path('GET', '/ping')
+def ping_path(server: Server, req: Request) -> Response:
+	return Response(200)
+
+
 server.path('POST', '/api/esp/sensors')(esp_sens_path)
 server.path('GET', '/api/esp/command')(esp_gcmd_path)
 server.path('POST', '/api/esp/command')(esp_dcmd_path)
