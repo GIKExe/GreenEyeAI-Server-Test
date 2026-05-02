@@ -1,7 +1,10 @@
 from random import randint
+from datetime import datetime
 
 from server import Server, Request, Response
 from server.cluster import File
+from server.data import Data
+from server.database import DataBase
 from server.logging import info, warn, error  # noqa: F401
 
 
@@ -28,6 +31,14 @@ def web_smod_path(server: Server, req: Request) -> Response:
 	return Response(200)
 
 
+def append_command(data: Data, device: str, state: str) -> None:
+	with data.commands_lock:
+		commands: list[tuple[int, str, str]] = data.commands
+		if len(commands) >= 10:
+			del commands[-1]
+		commands.append((randint(0, 65535), device, state))
+
+
 def web_aclt_path(server: Server, req: Request) -> Response:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
@@ -42,11 +53,7 @@ def web_aclt_path(server: Server, req: Request) -> Response:
 		return Response(400)
 	if data['state'] not in ('on', 'off',):
 		return Response(400)
-	with server.data.commands_lock:
-		commands: list[tuple[int, str, str]] = server.data.commands
-		if len(commands) >= 10:
-			del commands[-1]
-		commands.append((randint(0, 65535), 'light', data['state']))
+	append_command(server.data, 'light', data['state'])
 	info("Команада добавлена")
 	return Response(200)
 	
@@ -65,11 +72,7 @@ def web_acwr_path(server: Server, req: Request) -> Response:
 		return Response(400)
 	if data['state'] not in ('on', 'off',):
 		return Response(400)
-	with server.data.commands_lock:
-		commands: list[tuple[int, str, str]] = server.data.commands
-		if len(commands) >= 10:
-			del commands[-1]
-		commands.append((randint(0, 65535), 'water', data['state']))
+	append_command(server.data, 'water', data['state'])
 	info("Команада добавлена")
 	return Response(200)
 
@@ -88,11 +91,7 @@ def web_acfn_path(server: Server, req: Request) -> Response:
 		return Response(400)
 	if data['state'] not in ('on', 'off',):
 		return Response(400)
-	with server.data.commands_lock:
-		commands: list[tuple[int, str, str]] = server.data.commands
-		if len(commands) >= 10:
-			del commands[-1]
-		commands.append((randint(0, 65535), 'fan', data['state']))
+	append_command(server.data, 'fan', data['state'])
 	info("Команада добавлена")
 	return Response(200)
 
@@ -146,18 +145,109 @@ def web_paln_path(server: Server, req: Request) -> Response:
 	})
 
 
-def web_gdbr_path(server: Server, req: Request) -> Response:
-	# SELECT * FROM water
-	# WHERE timestamp >= unixepoch('now') - (120);
-	data = req.get_json()
+def web_sshd_path(server: Server, req: Request) -> Response:
+	data: dict | None = req.get_json()
 	if data is None:
 		return Response(400)
-	if 'table' not in data:
+	if (('token' not in data) or
+			('water' not in data) or
+			('light' not in data) or
+			('fan' not in data)):
 		return Response(400)
-	if data['table'] not in ('water', 'light', 'fan'):
+	if data['token'] != server.data.token:
 		return Response(400)
-	table = data['table'] 
-	data = server.database.execute('SELECT * FROM '+table, mode=3)
-	if data is None:
+	if (
+		('start' not in data['light']) or
+		('end' not in data['light']) or 
+		('interval_hours' not in data['water']) or
+		('interval_hours' not in data['fan']) or
+		('duration_minutes' not in data['water']) or
+		('duration_minutes' not in data['fan'])):
 		return Response(400)
+	if (
+		(type(data['light']['start']) is not str) or
+		(type(data['light']['end']) is not str) or
+		(type(data['water']['interval_hours']) is not int) or
+		(type(data['fan']['interval_hours']) is not int) or
+		(type(data['water']['duration_minutes']) is not int) or
+		(type(data['fan']['duration_minutes']) is not int)):
+		return Response(400)
+	try:
+		data['light']['start'] = datetime.strptime(data['light']['start'], "%H:%M").time()
+		data['light']['end'] = datetime.strptime(data['light']['end'], "%H:%M").time()
+	except:  # noqa: E722
+		return Response(400)
+	server.data.schedule = {
+		'light': {
+			'start': data['light']['start'],
+			'end': data['light']['end'],
+		},
+		'fan': {
+			'interval_hours': data['fan']['interval_hours'],
+			'duration_minutes': data['fan']['duration_minutes'],
+		},
+		'water': {
+			'interval_hours': data['water']['interval_hours'],
+			'duration_minutes': data['water']['duration_minutes'],
+		},
+	}
+	return Response(200)
+	
+
+def web_gshd_path(server: Server, req: Request) -> Response:
+	if server.data.schedule is None:
+		return Response(500)
+	return Response(200).json({
+		'light': {
+			'start': server.data.schedule['light']['start'].strftime("%H:%M"),
+			'end': server.data.schedule['light']['end'].strftime("%H:%M"),
+		},
+		'fan': {
+			'interval_hours': server.data.schedule['fan']['interval_hours'],
+			'duration_minutes': server.data.schedule['fan']['duration_minutes'],
+		},
+		'water': {
+			'interval_hours': server.data.schedule['water']['interval_hours'],
+			'duration_minutes': server.data.schedule['water']['duration_minutes'],
+		},
+	})
+
+
+# def web_gdb1_path(server: Server, req: Request) -> Response:
+# 	# SELECT * FROM water
+# 	# WHERE timestamp >= unixepoch('now') - (120);
+# 	data = req.get_json()
+# 	if data is None:
+# 		return Response(400)
+# 	if 'table' not in data:
+# 		return Response(400)
+# 	if data['table'] not in ('water', 'light', 'fan'):
+# 		return Response(400)
+# 	table = data['table'] 
+# 	data = server.database.execute('SELECT * FROM '+table, mode=3)
+# 	if data is None:
+# 		return Response(500)
+# 	return Response(200).json(data)
+
+
+def get_last_state(database: DataBase) -> dict[str, int]:
+	_list = database.execute(''' 
+		SELECT 'water' AS device,
+			(SELECT state FROM water ORDER BY timestamp DESC LIMIT 1) AS state
+		UNION ALL
+		SELECT 'light' AS device,
+			(SELECT state FROM light ORDER BY timestamp DESC LIMIT 1) AS state
+		UNION ALL
+		SELECT 'fan' AS device,
+			(SELECT state FROM fan ORDER BY timestamp DESC LIMIT 1) AS state;
+	''', mode=3)
+	if _list is None:
+		return {'water': 0, 'fan': 0, 'light': 0}
+	data = {k: v for k,v in _list}
+	return data
+
+
+def web_gdb2_path(server: Server, req: Request) -> Response:
+	data = get_last_state(server.database)
 	return Response(200).json(data)
+

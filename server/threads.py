@@ -1,6 +1,7 @@
-from threading import Thread
+from threading import Thread, Lock, RLock
 from functools import wraps
 from typing import Callable, Any
+__all__ = ['nonblocking', 'Lock', 'RLock']
 
 
 def nonblocking(func: Callable[..., Any]) -> Callable[..., None]:
