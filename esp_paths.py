@@ -10,8 +10,8 @@ def esp_sens_path(server: Server, req: Request) -> Response:
 		return Response(500)
 	if data and 'temperature' in data and 'humidity' in data:
 		server.database.execute(
-			'INSERT INTO sensors (temperature, humidity) VALUES (?, ?)',
-			(data['temperature'], data['humidity'])
+			'INSERT INTO sensors (timestamp, temperature, humidity) VALUES (?, ?, ?)',
+			(time(), data['temperature'], data['humidity'])
 		)
 	else:
 		return Response(400).text('Не полные данные')
