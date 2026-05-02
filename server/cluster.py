@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing_extensions import Self
 from time import time
 from os import listdir
 from os.path import isfile, isdir, getmtime
@@ -15,7 +14,7 @@ class File:
 	delay: float
 	data: bytes
 
-	def __new__(cls, path: str, delay: float = 5) -> Self | None:
+	def __new__(cls, path: str, delay: float = 5) -> File | None:
 		if not isfile(path):
 			return None
 		file = super().__new__(cls)
@@ -69,7 +68,7 @@ class Dir:
 	file_delay: float
 	paths: dict[str, Dir | File]
 
-	def __new__(cls, path: str, delay: float = 1, file_delay: float = 5) -> Self | None: 
+	def __new__(cls, path: str, delay: float = 1, file_delay: float = 5) -> Dir | None: 
 		if not isdir(path):
 			return None
 		dir = super().__new__(cls)
@@ -144,7 +143,7 @@ class Cluster:
 		path: str,
 		dir_delay: float = 1,
 		file_delay: float = 5
-	) -> Self | None:
+	) -> Cluster | None:
 		if path.startswith('./'):
 			path = path[2:]
 		main = Dir(path, dir_delay, file_delay)

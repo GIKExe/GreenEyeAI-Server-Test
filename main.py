@@ -25,6 +25,7 @@ info('Токен авторизации:', data.token)
 database = DataBase('main.db')
 database.execute('''
 	CREATE TABLE IF NOT EXISTS sensors (
+	  timestamp REAL NOT NULL,
 		temperature FLOAT NOT NULL,
 		humidity FLOAT NOT NULL
 	)
