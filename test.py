@@ -47,13 +47,11 @@ token = data['token']
 # sleep(1)
 # exit()
 
-req = Request('POST', '/api/schedule')
+req = Request('GET', '/api/graph/table')
 req.header('Connection', 'keep-alive')
 req.json({
-	"token": token,
-	"light": {"start": "08:00", "end": "19:14"},
-	"fan": {"interval_hours": 1, "duration_minutes": 1},
-	"water": {"interval_hours": 1, "duration_minutes": 2}
+	'table': 'water',
+	'seconds': 19*60*60, # 1 день
 })
 req.to_socket(socket)
 

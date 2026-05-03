@@ -14,7 +14,7 @@ from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 from web_paths import web_gmod_path, web_smod_path
 from web_paths import web_gidx_path, web_gadm_path, web_galn_path, web_paln_path
 from web_paths import web_acwr_path, web_aclt_path, web_acfn_path
-from web_paths import web_gdb2_path
+from web_paths import web_gdb1_path, web_gdb2_path
 # установка и получение расписания
 from web_paths import web_sshd_path, web_gshd_path
 from web_paths import get_last_state, append_command
@@ -185,7 +185,7 @@ server.path('GET',  '/admin'             )(web_gadm_path)
 server.path('GET',  '/admin.html'        )(web_gadm_path)
 server.path('GET',  '/admin/login'       )(web_galn_path)
 server.path('POST', '/api/admin/login'   )(web_paln_path)
-# server.path('GET',  '/api/web/db'        )(web_gdb1_path)
+server.path('GET',  '/api/graph/table'   )(web_gdb1_path)
 server.path('GET',  '/api/last_state'    )(web_gdb2_path)
 server.path('POST', '/api/schedule'      )(web_sshd_path)
 server.path('GET',  '/api/schedule'      )(web_gshd_path)

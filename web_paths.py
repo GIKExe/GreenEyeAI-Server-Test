@@ -213,21 +213,27 @@ def web_gshd_path(server: Server, req: Request) -> Response:
 	})
 
 
-# def web_gdb1_path(server: Server, req: Request) -> Response:
-# 	# SELECT * FROM water
-# 	# WHERE timestamp >= unixepoch('now') - (120);
-# 	data = req.get_json()
-# 	if data is None:
-# 		return Response(400)
-# 	if 'table' not in data:
-# 		return Response(400)
-# 	if data['table'] not in ('water', 'light', 'fan'):
-# 		return Response(400)
-# 	table = data['table'] 
-# 	data = server.database.execute('SELECT * FROM '+table, mode=3)
-# 	if data is None:
-# 		return Response(500)
-# 	return Response(200).json(data)
+def web_gdb1_path(server: Server, req: Request) -> Response:
+	data = req.get_json()
+	if data is None:
+		return Response(400)
+	if ('table' not in data) or ('seconds' not in data):
+		return Response(400)
+	if data['table'] not in ('water', 'light', 'fan', 'sensors'):
+		return Response(400)
+	if type(data['seconds']) is not int:
+		return Response(400)
+	if data['seconds'] < 0:
+		return Response(400)
+	table = data['table']
+	seconds = data['seconds']
+	data = server.database.execute(f'''
+		SELECT * FROM {table}
+		WHERE timestamp >= unixepoch('now') - {seconds};
+	''', mode=3)
+	if data is None:
+		return Response(500)
+	return Response(200).json(data)
 
 
 def get_last_state(database: DataBase) -> dict[str, int]:
