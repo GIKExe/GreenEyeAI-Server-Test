@@ -35,6 +35,7 @@ data.commands_lock = Lock()
 data.mode = 'manual' # или auto
 data.mode_lock = Lock()
 data.token = str(uuid.uuid4())
+data.stream_lock = Lock()
 info('Токен авторизации:', data.token)
 
 
@@ -91,7 +92,8 @@ def update_stream():
 		frame = picam2.capture_array()
 		ret, buffer = cv2.imencode('.jpg', frame)
 		jpeg_bytes = buffer.tobytes()
-		data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
+		with data.stream_lock:
+			data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
 
 
 @nonblocking
