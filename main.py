@@ -74,18 +74,28 @@ server = Server(data, database, cluster)
 
 
 @nonblocking
-def main():
-	if is_rasberi_server:
-		# Настройка камеры
-		picam2 = Picamera2()
-		config = picam2.create_video_configuration(
-				main={"size": (640, 480)},
-				controls={"FrameRate": 24}
-		)
-		picam2.configure(config)
-		picam2.start()
-		sleep(1)  # прогрев камеры
+def update_stream():
+	if not is_rasberi_server:
+		return
+	
+	picam2 = Picamera2()
+	config = picam2.create_video_configuration(
+			main={"size": (640, 480)},
+			controls={"FrameRate": 24}
+	)
+	picam2.configure(config)
+	picam2.start()
+	sleep(1)  # прогрев камеры
 
+	while True:
+		frame = picam2.capture_array()
+		ret, buffer = cv2.imencode('.jpg', frame)
+		jpeg_bytes = buffer.tobytes()
+		data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
+
+
+@nonblocking
+def main():
 	# Анти-спам: время последней отправленной команды для каждого устройства.
 	# Предотвращает спам в очередь, пока база данных не обновится.
 	last_command_time = {'light': 0.0, 'water': 0.0, 'fan': 0.0}
@@ -96,12 +106,6 @@ def main():
 	last_fan_start = 0.0
 
 	while True:
-		if is_rasberi_server:
-			frame = picam2.capture_array()
-			ret, buffer = cv2.imencode('.jpg', frame)
-			jpeg_bytes = buffer.tobytes()
-			data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
-			
 		# Если не авто-режим или нет расписания — просто спим и ждем
 		if (data.mode != 'auto') or (data.schedule is None):
 			sleep(10)
@@ -219,4 +223,5 @@ server.path('GET',  '/api/schedule'      )(web_gshd_path)
 server.path('GET',  '/api/stream',        )(web_gstr_path)
 
 main()
+update_stream()
 server.start()
