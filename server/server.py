@@ -136,17 +136,19 @@ class Server:
 				client.send(res.to_bytes())
 				continue
 	
-			while True:
+			res = self.paths[req.path][req.method](self, req)
+			if 'Connection' not in res.headers:
+				res.header('Connection', 'keep-alive' if running else 'close')
+			info(res.to_body())
+			client.send(res.to_bytes())
+			if 'Content-type' not in res.headers:
+				break
+			if 'multipart' not in res.headers['Content-type']:
+				break
+			while True:	
 				res = self.paths[req.path][req.method](self, req)
-				if 'Connection' not in res.headers:
-					res.header('Connection', 'keep-alive' if running else 'close')
-				info(res.to_body())
-				client.send(res.to_bytes())
-				if 'Content-type' not in res.headers:
-					break
-				if 'multipart' not in res.headers['Content-type']:
-					break
-				sleep(1)
+				client.send(res.data)
+				sleep(1/15)
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()
