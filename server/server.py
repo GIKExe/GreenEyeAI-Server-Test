@@ -139,7 +139,7 @@ class Server:
 			while True:
 				res = self.paths[req.path][req.method](self, req)
 				res.header('Connection', 'keep-alive' if running else 'close')
-				info(res.to_text())
+				info(res.to_body())
 				client.send(res.to_bytes())
 				if 'Content-type' not in res.headers:
 					break
