@@ -3,6 +3,14 @@ from time import sleep
 from datetime import datetime
 from threading import Lock
 
+try:
+	import io
+	import cv2 # type: ignore
+	from picamera2 import Picamera2 # type: ignore
+	is_rasberi_server = True
+except:
+	is_rasberi_server = False
+
 from server import Server, Request, Response
 from server import Data, DataBase
 from server.cluster import Cluster
@@ -17,6 +25,7 @@ from web_paths import web_acwr_path, web_aclt_path, web_acfn_path
 from web_paths import web_gdb1_path, web_gdb2_path
 # установка и получение расписания
 from web_paths import web_sshd_path, web_gshd_path
+from web_paths import web_gstr_path
 from web_paths import get_last_state, append_command
 
 
@@ -66,6 +75,17 @@ server = Server(data, database, cluster)
 
 @nonblocking
 def main():
+	if is_rasberi_server:
+		# Настройка камеры
+		picam2 = Picamera2()
+		config = picam2.create_video_configuration(
+				main={"size": (640, 480)},
+				controls={"FrameRate": 24}
+		)
+		picam2.configure(config)
+		picam2.start()
+		sleep(1)  # прогрев камеры
+
 	# Анти-спам: время последней отправленной команды для каждого устройства.
 	# Предотвращает спам в очередь, пока база данных не обновится.
 	last_command_time = {'light': 0.0, 'water': 0.0, 'fan': 0.0}
@@ -76,6 +96,12 @@ def main():
 	last_fan_start = 0.0
 
 	while True:
+		if is_rasberi_server:
+			frame = picam2.capture_array()
+			ret, buffer = cv2.imencode('.jpg', frame)
+			jpeg_bytes = buffer.tobytes()
+			data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
+			
 		# Если не авто-режим или нет расписания — просто спим и ждем
 		if (data.mode != 'auto') or (data.schedule is None):
 			sleep(10)
@@ -189,6 +215,8 @@ server.path('GET',  '/api/graph/table'   )(web_gdb1_path)
 server.path('GET',  '/api/last_state'    )(web_gdb2_path)
 server.path('POST', '/api/schedule'      )(web_sshd_path)
 server.path('GET',  '/api/schedule'      )(web_gshd_path)
+
+server.path('GET',  '/api/steam',        )(web_gstr_path)
 
 main()
 server.start()

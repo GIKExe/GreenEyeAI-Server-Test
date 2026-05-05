@@ -257,3 +257,12 @@ def web_gdb2_path(server: Server, req: Request) -> Response:
 	data = get_last_state(server.database)
 	return Response(200).json(data)
 
+
+def web_gstr_path(server: Server, req: Request) -> Response:
+	if server.data.stream is None:
+		return Response(404)
+	res = Response(200)
+	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
+	res.bytes(server.data.stream)
+	return res
+
