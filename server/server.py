@@ -12,7 +12,7 @@ from .database import DataBase
 from .cluster import Cluster, File
 
 
-CALLBACK_TYPE = Callable[['Server', Request], Response]
+CALLBACK_TYPE = Callable[['Server', Socket, Request], Response]
 
 
 def get_content_type(path: str) -> str:
@@ -136,19 +136,10 @@ class Server:
 				client.send(res.to_bytes())
 				continue
 	
-			res = self.paths[req.path][req.method](self, req)
+			res = self.paths[req.path][req.method](self, client, req)
 			if 'Connection' not in res.headers:
 				res.header('Connection', 'keep-alive' if running else 'close')
-			info(res.to_body())
 			client.send(res.to_bytes())
-			if 'Content-type' not in res.headers:
-				break
-			if 'multipart' not in res.headers['Content-type']:
-				break
-			while True:	
-				res = self.paths[req.path][req.method](self, req)
-				client.send(res.data)
-				sleep(1/15)
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()

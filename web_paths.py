@@ -1,5 +1,6 @@
 from random import randint
 from datetime import datetime
+from socket import socket as Socket
 
 from server import Server, Request, Response
 from server.cluster import File
@@ -8,7 +9,7 @@ from server.database import DataBase
 from server.logging import info, warn, error  # noqa: F401
 
 
-def web_gmod_path(server: Server, req: Request) -> Response:
+def web_gmod_path(server: Server, client: Socket, req: Request) -> Response:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
 	return Response(200).json({
@@ -16,7 +17,7 @@ def web_gmod_path(server: Server, req: Request) -> Response:
 	})
 
 
-def web_smod_path(server: Server, req: Request) -> Response:
+def web_smod_path(server: Server, client: Socket, req: Request) -> Response:
 	data = req.get_json()
 	if data is None:
 		return Response(400)
@@ -39,7 +40,7 @@ def append_command(data: Data, device: str, state: str) -> None:
 		commands.append((randint(0, 65535), device, state))
 
 
-def web_aclt_path(server: Server, req: Request) -> Response:
+def web_aclt_path(server: Server, client: Socket, req: Request) -> Response:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
 	if mode != 'manual':
@@ -58,7 +59,7 @@ def web_aclt_path(server: Server, req: Request) -> Response:
 	return Response(200)
 	
 
-def web_acwr_path(server: Server, req: Request) -> Response:
+def web_acwr_path(server: Server, client: Socket, req: Request) -> Response:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
 	if mode != 'manual':
@@ -77,7 +78,7 @@ def web_acwr_path(server: Server, req: Request) -> Response:
 	return Response(200)
 
 
-def web_acfn_path(server: Server, req: Request) -> Response:
+def web_acfn_path(server: Server, client: Socket, req: Request) -> Response:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
 	if mode != 'manual':
@@ -96,7 +97,7 @@ def web_acfn_path(server: Server, req: Request) -> Response:
 	return Response(200)
 
 
-def web_gidx_path(server: Server, req: Request) -> Response:
+def web_gidx_path(server: Server, client: Socket, req: Request) -> Response:
 	if '/index.html' in server.cluster:
 		file = server.cluster['/index.html']
 		if type(file) is File:
@@ -104,7 +105,7 @@ def web_gidx_path(server: Server, req: Request) -> Response:
 	return Response(404)
 
 
-def web_gadm_path(server: Server, req: Request) -> Response:
+def web_gadm_path(server: Server, client: Socket, req: Request) -> Response:
 	res = Response(302).header('Location', '/admin/login')
 
 	if 'Cookie' not in req.headers:
@@ -122,7 +123,7 @@ def web_gadm_path(server: Server, req: Request) -> Response:
 	return Response(500)
 
 
-def web_galn_path(server: Server, req: Request) -> Response:
+def web_galn_path(server: Server, client: Socket, req: Request) -> Response:
 	path = '/admin/login.html'
 	if path in server.cluster:
 		file = server.cluster[path]
@@ -131,7 +132,7 @@ def web_galn_path(server: Server, req: Request) -> Response:
 	return Response(404)
 
 
-def web_paln_path(server: Server, req: Request) -> Response:
+def web_paln_path(server: Server, client: Socket, req: Request) -> Response:
 	data = req.get_json()
 	if data is None:
 		return Response(400)
@@ -145,7 +146,7 @@ def web_paln_path(server: Server, req: Request) -> Response:
 	})
 
 
-def web_sshd_path(server: Server, req: Request) -> Response:
+def web_sshd_path(server: Server, client: Socket, req: Request) -> Response:
 	data: dict | None = req.get_json()
 	if data is None:
 		return Response(400)
@@ -194,7 +195,7 @@ def web_sshd_path(server: Server, req: Request) -> Response:
 	return Response(200)
 	
 
-def web_gshd_path(server: Server, req: Request) -> Response:
+def web_gshd_path(server: Server, client: Socket, req: Request) -> Response:
 	if server.data.schedule is None:
 		return Response(500)
 	return Response(200).json({
@@ -213,7 +214,7 @@ def web_gshd_path(server: Server, req: Request) -> Response:
 	})
 
 
-def web_gdb1_path(server: Server, req: Request) -> Response:
+def web_gdb1_path(server: Server, client: Socket, req: Request) -> Response:
 	data = req.get_json()
 	if data is None:
 		return Response(400)
@@ -253,19 +254,23 @@ def get_last_state(database: DataBase) -> dict[str, int]:
 	return data
 
 
-def web_gdb2_path(server: Server, req: Request) -> Response:
+def web_gdb2_path(server: Server, client: Socket, req: Request) -> Response:
 	data = get_last_state(server.database)
 	return Response(200).json(data)
 
 
-def web_gstr_path(server: Server, req: Request) -> Response:
+def web_gstr_path(server: Server, client: Socket, req: Request) -> Response:
 	if server.data.stream is None:
 		return Response(404)
 	res = Response(200)
 	res.header('Transfer-Encoding', 'chunked')
-	# res.header('Connection', 'close')
+	res.header('Connection', 'keep-alive')
 	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
-	with server.data.stream_lock:
-		res.bytes(server.data.stream)
-	return res
+	client.send(res.to_bytes())
+
+	while True:
+		with server.data.stream_lock:
+			client.send(server.data.stream)
+			
+	return Response(404)
 

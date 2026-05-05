@@ -2,6 +2,8 @@ import uuid
 from time import sleep
 from datetime import datetime
 from threading import Lock
+from socket import socket as Socket
+
 
 try:
 	import io
@@ -192,12 +194,12 @@ def main():
 
 
 @server.path('GET', '/me')
-def me_path(server: Server, req: Request) -> Response:
+def me_path(server: Server, client: Socket, req: Request) -> Response:
 	return Response(200).text(req.to_body().replace('\r\n', '<br>'))
 
 
 @server.path('GET', '/ping')
-def ping_path(server: Server, req: Request) -> Response:
+def ping_path(server: Server, client: Socket, req: Request) -> Response:
 	return Response(200)
 
 
