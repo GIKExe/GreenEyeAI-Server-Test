@@ -216,7 +216,7 @@ server.path('GET',  '/api/last_state'    )(web_gdb2_path)
 server.path('POST', '/api/schedule'      )(web_sshd_path)
 server.path('GET',  '/api/schedule'      )(web_gshd_path)
 
-server.path('GET',  '/api/steam',        )(web_gstr_path)
+server.path('GET',  '/api/stream',        )(web_gstr_path)
 
 main()
 server.start()
