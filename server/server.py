@@ -139,13 +139,13 @@ class Server:
 			while True:
 				res = self.paths[req.path][req.method](self, req)
 				res.header('Connection', 'keep-alive' if running else 'close')
-				info(res.to_bytes())
+				info(res.to_body())
 				client.send(res.to_bytes())
 				if 'Content-type' not in res.headers:
 					break
 				if 'multipart' not in res.headers['Content-type']:
 					break
-				sleep(0.1)
+				sleep(1)
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()
