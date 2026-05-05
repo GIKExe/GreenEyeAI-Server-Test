@@ -136,9 +136,14 @@ class Server:
 				client.send(res.to_bytes())
 				continue
 	
-			res = self.paths[req.path][req.method](self, req)
-			res.header('Connection', 'keep-alive' if running else 'close')
-			client.send(res.to_bytes())
+			while True:
+				res = self.paths[req.path][req.method](self, req)
+				res.header('Connection', 'keep-alive' if running else 'close')
+				client.send(res.to_bytes())
+				if 'Content-type' not in res.headers:
+					break
+				if 'multipart' not in res.headers['Content-type']:
+					break 
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()

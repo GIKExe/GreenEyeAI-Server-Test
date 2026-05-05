@@ -262,6 +262,7 @@ def web_gstr_path(server: Server, req: Request) -> Response:
 	if server.data.stream is None:
 		return Response(404)
 	res = Response(200)
+	res.header('Cache-Control', 'no-cache')
 	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
 	res.bytes(server.data.stream)
 	return res
