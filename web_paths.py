@@ -41,7 +41,12 @@ def append_command(data: Data, device: str, state: str) -> None:
 		commands.append((randint(0, 65535), device, state))
 
 
-def web_aclt_path(server: Server, client: Socket, req: Request) -> Response | None:
+def rele_processing(
+	name: str,
+	server: Server,
+	client: Socket,
+	req: Request
+	) -> Response | None:
 	with server.data.mode_lock:
 		mode: str = server.data.mode
 	if mode != 'manual':
@@ -55,47 +60,21 @@ def web_aclt_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(400)
 	if data['state'] not in ('on', 'off',):
 		return Response(400)
-	append_command(server.data, 'light', data['state'])
-	info("Команада добавлена")
+	append_command(server.data, name, data['state'])
+	# info("Команада добавлена")
 	return Response(200)
+
+
+def web_aclt_path(server: Server, client: Socket, req: Request) -> Response | None:
+	return rele_processing('light', server, client, req)
 	
 
 def web_acwr_path(server: Server, client: Socket, req: Request) -> Response | None:
-	with server.data.mode_lock:
-		mode: str = server.data.mode
-	if mode != 'manual':
-		return Response(400)
-	data = req.get_json()
-	if data is None:
-		return Response(400)
-	if ('state' not in data) or ('token' not in data):
-		return Response(400)
-	if data['token'] != server.data.token:
-		return Response(400)
-	if data['state'] not in ('on', 'off',):
-		return Response(400)
-	append_command(server.data, 'water', data['state'])
-	info("Команада добавлена")
-	return Response(200)
+	return rele_processing('water', server, client, req)
 
 
 def web_acfn_path(server: Server, client: Socket, req: Request) -> Response | None:
-	with server.data.mode_lock:
-		mode: str = server.data.mode
-	if mode != 'manual':
-		return Response(400)
-	data = req.get_json()
-	if data is None:
-		return Response(400)
-	if ('state' not in data) or ('token' not in data):
-		return Response(400)
-	if data['token'] != server.data.token:
-		return Response(400)
-	if data['state'] not in ('on', 'off',):
-		return Response(400)
-	append_command(server.data, 'fan', data['state'])
-	info("Команада добавлена")
-	return Response(200)
+	return rele_processing('fan', server, client, req)
 
 
 def web_gidx_path(server: Server, client: Socket, req: Request) -> Response | None:
