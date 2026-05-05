@@ -144,7 +144,8 @@ class Server:
 				if 'Content-type' not in res.headers:
 					break
 				if 'multipart' not in res.headers['Content-type']:
-					break 
+					break
+				sleep(0.1)
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()
