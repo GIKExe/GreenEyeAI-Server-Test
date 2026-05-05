@@ -6,11 +6,11 @@ from socket import socket as Socket
 
 
 try:
-	import io
+	import io  # noqa: F401
 	import cv2 # type: ignore
 	from picamera2 import Picamera2 # type: ignore
 	is_rasberi_server = True
-except:
+except:  # noqa: E722
 	is_rasberi_server = False
 
 from server import Server, Request, Response
@@ -95,7 +95,7 @@ def update_stream():
 		ret, buffer = cv2.imencode('.jpg', frame)
 		jpeg_bytes = buffer.tobytes()
 		with data.stream_lock:
-			data.stream = b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n'
+			data.stream = jpeg_bytes
 
 
 @nonblocking
@@ -194,12 +194,12 @@ def main():
 
 
 @server.path('GET', '/me')
-def me_path(server: Server, client: Socket, req: Request) -> Response:
+def me_path(server: Server, client: Socket, req: Request) -> Response | None:
 	return Response(200).text(req.to_body().replace('\r\n', '<br>'))
 
 
 @server.path('GET', '/ping')
-def ping_path(server: Server, client: Socket, req: Request) -> Response:
+def ping_path(server: Server, client: Socket, req: Request) -> Response | None:
 	return Response(200)
 
 

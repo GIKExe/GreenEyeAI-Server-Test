@@ -12,7 +12,7 @@ from .database import DataBase
 from .cluster import Cluster, File
 
 
-CALLBACK_TYPE = Callable[['Server', Socket, Request], Response]
+CALLBACK_TYPE = Callable[['Server', Socket, Request], Response | None]
 
 
 def get_content_type(path: str) -> str:
@@ -113,15 +113,23 @@ class Server:
 				running = False
 
 			if req.path not in self.paths:
-				if req.path in self.cluster:
-					file = self.cluster[req.path]
+				def _127836187263786():
+					file = self.cluster[req.path] # type: ignore
 					if type(file) is File:
 						res = Response(200)
 						res.bytes(file.read())
 						res.header('Content-Type', get_content_type(file.path))
 						res.header('Connection', 'keep-alive' if running else 'close')
 						client.send(res.to_bytes())
-						continue
+						
+				if req.path in self.cluster:
+					_127836187263786()
+					continue
+				
+				elif req.path + '.html' in self.cluster:
+					req.path += '.html'
+					_127836187263786()
+					continue
 				
 				res = Response(404)
 				res.text("404: Страница не найдена")
@@ -137,9 +145,10 @@ class Server:
 				continue
 	
 			res = self.paths[req.path][req.method](self, client, req)
-			if 'Connection' not in res.headers:
-				res.header('Connection', 'keep-alive' if running else 'close')
-			client.send(res.to_bytes())
+			if res is not None:
+				if 'Connection' not in res.headers:
+					res.header('Connection', 'keep-alive' if running else 'close')
+				client.send(res.to_bytes())
 
 		info(f'Отключение: {ip}:{port}')
 		client.close()

@@ -5,7 +5,7 @@ from server import Server, Request, Response
 from server.logging import info, warn, error  # noqa: F401
 
 
-def esp_sens_path(server: Server, client: Socket, req: Request) -> Response:
+def esp_sens_path(server: Server, client: Socket, req: Request) -> Response | None:
 	data: dict = req.get_json()
 	if server.database is None:
 		return Response(500)
@@ -19,7 +19,7 @@ def esp_sens_path(server: Server, client: Socket, req: Request) -> Response:
 	return Response(200)
 
 
-def esp_gcmd_path(server: Server, client: Socket, req: Request) -> Response:
+def esp_gcmd_path(server: Server, client: Socket, req: Request) -> Response | None:
 	commands: list[tuple[int, str, str]] = server.data.commands
 	command_id, device, action = (0, 'None', 'off')
 	with server.data.commands_lock:
@@ -33,7 +33,7 @@ def esp_gcmd_path(server: Server, client: Socket, req: Request) -> Response:
 	})
 
 
-def esp_dcmd_path(server: Server, client: Socket, req: Request) -> Response:
+def esp_dcmd_path(server: Server, client: Socket, req: Request) -> Response | None:
 	commands: list[tuple[int, str, str]] = server.data.commands
 	data = req.get_json()
 	if data is None:
