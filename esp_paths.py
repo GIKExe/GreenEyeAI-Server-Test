@@ -9,14 +9,14 @@ def esp_sens_path(server: Server, client: Socket, req: Request) -> Response | No
 	data: dict = req.get_json()
 	if server.database is None:
 		return Response(500)
-	if data and 'temperature' in data and 'humidity' in data:
+	if data and ('temperature' in data) and ('humidity' in data):
 		server.database.execute(
 			'INSERT INTO sensors (timestamp, temperature, humidity) VALUES (?, ?, ?)',
 			(time(), data['temperature'], data['humidity'])
 		)
 	else:
 		return Response(400).text('Не полные данные')
-	return Response(200)
+	return Response(200).header('Connection', 'keep-alive')
 
 
 def esp_gcmd_path(server: Server, client: Socket, req: Request) -> Response | None:
@@ -30,7 +30,7 @@ def esp_gcmd_path(server: Server, client: Socket, req: Request) -> Response | No
 		"id": command_id,
 		"device": device,
 		"action": action
-	})
+	}).header('Connection', 'keep-alive')
 
 
 def esp_dcmd_path(server: Server, client: Socket, req: Request) -> Response | None:
@@ -51,4 +51,4 @@ def esp_dcmd_path(server: Server, client: Socket, req: Request) -> Response | No
 		(time(), True if action == 'on' else False)
 	)
 	info("Команда удалена")
-	return Response(200)
+	return Response(200).header('Connection', 'keep-alive')

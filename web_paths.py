@@ -11,8 +11,7 @@ from server.logging import info, warn, error  # noqa: F401
 
 
 def web_gmod_path(server: Server, client: Socket, req: Request) -> Response | None:
-	with server.data.mode_lock:
-		mode: str = server.data.mode
+	mode: str = server.data.mode
 	return Response(200).json({
 		'mode': mode
 	})
@@ -28,8 +27,7 @@ def web_smod_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(400)
 	if data['mode'] not in ('auto', 'manual',):
 		return Response(400)
-	with server.data.mode_lock:
-		server.data.mode = data['mode']
+	server.data.mode = data['mode']
 	return Response(200)
 
 
@@ -47,8 +45,7 @@ def rele_processing(
 	client: Socket,
 	req: Request
 	) -> Response | None:
-	with server.data.mode_lock:
-		mode: str = server.data.mode
+	mode: str = server.data.mode
 	if mode != 'manual':
 		return Response(400)
 	data = req.get_json()
@@ -77,14 +74,6 @@ def web_acfn_path(server: Server, client: Socket, req: Request) -> Response | No
 	return rele_processing('fan', server, client, req)
 
 
-def web_gidx_path(server: Server, client: Socket, req: Request) -> Response | None:
-	if '/index.html' in server.cluster:
-		file = server.cluster['/index.html']
-		if type(file) is File:
-			return Response(200).html(file.read())
-	return Response(404)
-
-
 def web_gadm_path(server: Server, client: Socket, req: Request) -> Response | None:
 	res = Response(302).header('Location', '/admin/login')
 
@@ -94,21 +83,10 @@ def web_gadm_path(server: Server, client: Socket, req: Request) -> Response | No
 	if 'token='+server.data.token not in req.headers['Cookie']:
 		return res
 
-	if '/admin.html' not in server.cluster:
-		return Response(404)
-	
-	obj = server.cluster['/admin.html']
-	if type(obj) is File:
-		return Response(200).bytes(obj.read())
-	return Response(500)
-
-
-def web_galn_path(server: Server, client: Socket, req: Request) -> Response | None:
-	path = '/admin/login.html'
-	if path in server.cluster:
+	if (path := '/admin.html') in server.cluster:
 		file = server.cluster[path]
 		if type(file) is File:
-			return Response(200).html(file.read())
+			return Response(200).bytes(file.read())
 	return Response(404)
 
 
@@ -241,16 +219,14 @@ def web_gdb2_path(server: Server, client: Socket, req: Request) -> Response | No
 
 def web_gstr_path(server: Server, client: Socket, req: Request) -> Response | None:
 	if server.data.stream is None:
-		return Response(404)
+		return Response(500)
 	res = Response(200)
 	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
-	res.header('Connection', 'close')
 	info(res.to_text())
 	client.send(res.to_bytes())
 
 	while True:
-		with server.data.stream_lock:
-			jpeg_bytes: bytes = server.data.stream
+		jpeg_bytes: bytes = server.data.stream
 
 		data  = b'--frame\r\n'
 		data += b'Content-Type: image/jpeg\r\n'

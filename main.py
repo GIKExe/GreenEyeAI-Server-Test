@@ -4,7 +4,6 @@ from datetime import datetime
 from threading import Lock
 from socket import socket as Socket
 
-
 try:
 	import io  # noqa: F401
 	import cv2 # type: ignore
@@ -15,14 +14,14 @@ except:  # noqa: E722
 
 from server import Server, Request, Response
 from server import Data, DataBase
-from server.cluster import Cluster
+from server.cluster import Cluster, File
 from server.logging import info, warn, error  # noqa: F401
 from server.threads import nonblocking
 
 from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 
 from web_paths import web_gmod_path, web_smod_path
-from web_paths import web_gidx_path, web_gadm_path, web_galn_path, web_paln_path
+from web_paths import web_gadm_path, web_paln_path
 from web_paths import web_acwr_path, web_aclt_path, web_acfn_path
 from web_paths import web_gdb1_path, web_gdb2_path
 # установка и получение расписания
@@ -94,8 +93,7 @@ def update_stream():
 		frame = picam2.capture_array()
 		ret, buffer = cv2.imencode('.jpg', frame)
 		jpeg_bytes = buffer.tobytes()
-		with data.stream_lock:
-			data.stream = jpeg_bytes
+		data.stream = jpeg_bytes
 
 
 @nonblocking
@@ -186,10 +184,6 @@ def main():
 					append_command(data, 'fan', 'off')
 					last_command_time['fan'] = timestamp
 
-		# ==========================================
-		# Задержка цикла (ОБЯЗАТЕЛЬНО)
-		# ==========================================
-		# Не дает скрипту утилизировать процессор на 100% и бережет базу данных
 		sleep(5)
 
 
@@ -200,7 +194,7 @@ def me_path(server: Server, client: Socket, req: Request) -> Response | None:
 
 @server.path('GET', '/ping')
 def ping_path(server: Server, client: Socket, req: Request) -> Response | None:
-	return Response(200)
+	return Response(200).header('Connection', 'keep-alive')
 
 
 server.path('POST', '/api/esp/sensors'   )(esp_sens_path)
@@ -214,10 +208,17 @@ server.path('POST', '/api/command/water' )(web_acwr_path)
 server.path('POST', '/api/command/light' )(web_aclt_path)
 server.path('POST', '/api/command/fan'   )(web_acfn_path)
 
-server.path('GET',  '/'                  )(web_gidx_path)
+
+@server.path('GET',  '/')
+def web_gidx_path(server: Server, client: Socket, req: Request) -> Response | None:
+	if '/index.html' in server.cluster:
+		file = server.cluster['/index.html']
+		if type(file) is File:
+			return Response(200).html(file.read())
+	return Response(404)
+
 server.path('GET',  '/admin'             )(web_gadm_path)
 server.path('GET',  '/admin.html'        )(web_gadm_path)
-server.path('GET',  '/admin/login'       )(web_galn_path)
 server.path('POST', '/api/admin/login'   )(web_paln_path)
 server.path('GET',  '/api/graph/table'   )(web_gdb1_path)
 server.path('GET',  '/api/last_state'    )(web_gdb2_path)
