@@ -101,7 +101,7 @@ def web_paln_path(server: Server, client: Socket, req: Request) -> Response | No
 	return Response(200).json({
 		'token': server.data.token,
 		'expires_in': 86400
-	})
+	}).header('Set-Cookie', f'token={server.data.token}; Path=/; Max-Age=86400')
 
 
 def web_sshd_path(server: Server, client: Socket, req: Request) -> Response | None:
@@ -155,7 +155,7 @@ def web_sshd_path(server: Server, client: Socket, req: Request) -> Response | No
 
 def web_gshd_path(server: Server, client: Socket, req: Request) -> Response | None:
 	if server.data.schedule is None:
-		return Response(500)
+		return Response(404)
 	return Response(200).json({
 		'light': {
 			'start': server.data.schedule['light']['start'].strftime("%H:%M"),
