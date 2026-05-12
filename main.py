@@ -22,10 +22,12 @@ from esp_paths import esp_sens_path, esp_gcmd_path, esp_dcmd_path
 
 from web_paths import web_gmod_path, web_smod_path
 from web_paths import web_gadm_path, web_paln_path
-from web_paths import web_acwr_path, web_aclt_path, web_acfn_path
+# работа с БД
+from web_paths import web_acwr_path, web_aclt_path, web_acfn_path, web_sphl_path
 from web_paths import web_gdb1_path, web_gdb2_path
 # установка и получение расписания
 from web_paths import web_sshd_path, web_gshd_path
+# получение стрима
 from web_paths import web_gstr_path
 from web_paths import get_last_state, append_command
 
@@ -64,6 +66,12 @@ database.execute('''
 	CREATE TABLE IF NOT EXISTS fan (
 		timestamp REAL NOT NULL,
 		state BOOLEAN NOT NULL
+	)
+''')
+database.execute('''
+	CREATE TABLE IF NOT EXISTS ph (
+		timestamp REAL NOT NULL,
+		level REAL NOT NULL
 	)
 ''')
 
@@ -217,6 +225,7 @@ server.path('POST', '/api/command/water' )(web_acwr_path)
 server.path('POST', '/api/command/light' )(web_aclt_path)
 server.path('POST', '/api/command/fan'   )(web_acfn_path)
 
+server.path('POST', '/api/ph'            )(web_sphl_path)
 
 server.path('GET',  '/admin'             )(web_gadm_path)
 server.path('GET',  '/admin.html'        )(web_gadm_path)

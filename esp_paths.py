@@ -50,5 +50,5 @@ def esp_dcmd_path(server: Server, client: Socket, req: Request) -> Response | No
 		f'INSERT INTO {device} (timestamp, state) VALUES (?, ?)',
 		(time(), True if action == 'on' else False)
 	)
-	info("Команда удалена")
+	# info("Команда удалена")
 	return Response(200).header('Connection', 'keep-alive')

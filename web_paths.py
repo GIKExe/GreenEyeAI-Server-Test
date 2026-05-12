@@ -178,7 +178,7 @@ def web_gdb1_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(400)
 	if ('table' not in data) or ('seconds' not in data):
 		return Response(400)
-	if data['table'] not in ('water', 'light', 'fan', 'sensors'):
+	if data['table'] not in ('water', 'light', 'fan', 'sensors', 'ph'):
 		return Response(400)
 	if type(data['seconds']) is not int:
 		return Response(400)
@@ -240,3 +240,22 @@ def web_gstr_path(server: Server, client: Socket, req: Request) -> Response | No
 			break
 		sleep(1/15)
 
+
+def web_sphl_path(server: Server, client: Socket, req: Request) -> Response | None:
+	data = req.get_json()
+	if data is None:
+		return Response(400)
+	if ('token' not in data) or ('level' not in data):
+		return Response(400)
+	if data['token'] != server.data.token:
+		return Response(400)
+	if type(data['level']) is not float:
+		return Response(400)
+	if (data['level'] < 0) or (data['level'] > 14):
+		return Response(400)
+	
+	server.database.execute(
+		'INSERT INTO ph (timestamp, level) VALUES (?, ?)',
+		(datetime.now().timestamp(), data['level'])
+	)
+	return Response(200)
