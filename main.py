@@ -197,6 +197,15 @@ def ping_path(server: Server, client: Socket, req: Request) -> Response | None:
 	return Response(200).header('Connection', 'keep-alive')
 
 
+@server.path('GET',  '/')
+def web_gidx_path(server: Server, client: Socket, req: Request) -> Response | None:
+	if '/index.html' in server.cluster:
+		file = server.cluster['/index.html']
+		if type(file) is File:
+			return Response(200).html(file.read())
+	return Response(404)
+
+
 server.path('POST', '/api/esp/sensors'   )(esp_sens_path)
 server.path('GET',  '/api/esp/command'   )(esp_gcmd_path)
 server.path('POST', '/api/esp/command'   )(esp_dcmd_path)
@@ -208,14 +217,6 @@ server.path('POST', '/api/command/water' )(web_acwr_path)
 server.path('POST', '/api/command/light' )(web_aclt_path)
 server.path('POST', '/api/command/fan'   )(web_acfn_path)
 
-
-@server.path('GET',  '/')
-def web_gidx_path(server: Server, client: Socket, req: Request) -> Response | None:
-	if '/index.html' in server.cluster:
-		file = server.cluster['/index.html']
-		if type(file) is File:
-			return Response(200).html(file.read())
-	return Response(404)
 
 server.path('GET',  '/admin'             )(web_gadm_path)
 server.path('GET',  '/admin.html'        )(web_gadm_path)
