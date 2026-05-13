@@ -1,6 +1,6 @@
 import uuid
 from time import sleep
-from datetime import datetime
+from datetime import datetime, time
 from threading import Lock
 from socket import socket as Socket
 
@@ -39,6 +39,20 @@ data.mode = 'manual' # или auto
 data.mode_lock = Lock()
 data.token = str(uuid.uuid4())
 data.stream_lock = Lock()
+data.schedule = {
+	'light': {
+		'start': time(8, 0),
+		'end': time(18, 0)
+	},
+	'fan': {
+		'interval_hours': 2,
+		'duration_minutes': 2
+	},
+	'water': {
+		'interval_hours': 5,
+		'duration_minutes': 5
+	}
+}
 info('Токен авторизации:', data.token)
 
 
