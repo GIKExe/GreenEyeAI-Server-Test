@@ -375,14 +375,12 @@
     <script>
         // --- Auth & Cookies ---
         function getToken() {
-            const match = document.cookie.match(/admin_token=([^;]+)/);
+            const match = document.cookie.match(/token=([^;]+)/);
             return match ? match[1] : null;
         }
 
-        if (!getToken()) window.location.href = '/admin/login';
-
         function logout() {
-            document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             window.location.href = '/admin/login';
         }
 

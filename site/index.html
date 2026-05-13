@@ -4,209 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GreenEye AI — Мониторинг</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f7fafc;
-            min-height: 100vh;
-        }
-        
-        /* Header */
-        .header {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 24px;
-            font-weight: 700;
-            color: #48bb78;
-        }
-        
-        .logo svg {
-            width: 32px;
-            height: 32px;
-            fill: #48bb78;
-        }
-        
-        .nav {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .nav a {
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .nav a:hover {
-            color: #48bb78;
-        }
-        
-        .nav a.admin-link {
-            color: #48bb78;
-            font-weight: 600;
-        }
-        
-        /* Main Content */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        
-        .section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .section-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* Status Grid */
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        
-        .status-item {
-            padding: 20px;
-            background: #f7fafc;
-            border-radius: 12px;
-        }
-        
-        .status-label {
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        
-        .status-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
-        }
-        
-        .status-value.online {
-            color: #48bb78;
-        }
-        
-        /* Relay Status */
-        .relay-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .relay-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            background: #f7fafc;
-            border-radius: 12px;
-        }
-        
-        .relay-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-        }
-        
-        .relay-status {
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-        }
-        
-        .relay-status.on {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        
-        .relay-status.off {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-        
-        /* Schedule Display */
-        .schedule-display {
-            background: #f7fafc;
-            padding: 25px;
-            border-radius: 12px;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            line-height: 1.6;
-            color: #2d3748;
-        }
-        
-        /* Camera */
-        .camera-container {
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            aspect-ratio: 16/9;
-        }
-        
-        .camera-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        /* Charts */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        
-        .chart-item {
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 12px;
-            min-height: 200px;
-        }
-        
-        .chart-title {
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-    </style>
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <header class="header">
@@ -224,7 +22,7 @@
 
     <main class="container">
         <!-- System Status -->
-        <section class="section" id="dashboard">
+        <!-- <section class="section" id="dashboard">
             <h2 class="section-title">
                 <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                 Состояние системы
@@ -247,7 +45,7 @@
                     <div class="status-value" id="uptime">...</div>
                 </div>
             </div>
-        </section>
+        </section> -->
 
         <!-- Relay Status -->
         <section class="section">
@@ -293,12 +91,12 @@
         <section class="section" id="graphs">
             <h2 class="section-title">
                 <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
-                Уровень воды (история)
+                История состояний
             </h2>
             <div class="charts-grid">
                 <div class="chart-item">
-                    <div class="chart-title">Уровень воды (%)</div>
-                    <div id="water-chart">Загрузка данных...</div>
+                    <div class="chart-title">Состояние обдува</div>
+                    <div id="fan-state-chart">Загрузка данных...</div>
                 </div>
                 <div class="chart-item">
                     <div class="chart-title">Состояние полива</div>
@@ -394,7 +192,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        'table': 'water',
+                        'table': 'fan',
                         'seconds': 10*60
                     })
                 });
@@ -406,7 +204,7 @@
 
                 const data = await response.json();
                 console.log('Данные получены:', data);
-                document.getElementById('water-chart').innerHTML = `Данных: ${data} записей за последние 10 минут`;
+                document.getElementById('fan-state-chart').innerHTML = `Данных: ${data} записей за последние 10 минут`;
             } catch (error) {
                 console.error('Ошибка запроса:', error.message);
                 // Дополнительная обработка ошибок (сеть, таймаут и т.д.)
