@@ -213,7 +213,6 @@ def web_gstr_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(500)
 	res = Response(200)
 	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
-	info(res.to_text())
 	client.send(res.to_bytes())
 
 	while True:
