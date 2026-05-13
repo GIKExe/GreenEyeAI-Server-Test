@@ -152,8 +152,8 @@ def main():
 		# ==========================================
 		# 1. УПРАВЛЕНИЕ ОСВЕЩЕНИЕМ (LIGHT)
 		# ==========================================
-		start = datetime.strptime(data['light']['start'], "%H:%M").time()
-		end = datetime.strptime(data['light']['end'], "%H:%M").time()
+		start = datetime.strptime(data.schedule['light']['start'], "%H:%M").time()
+		end = datetime.strptime(data.schedule['light']['end'], "%H:%M").time()
 		
 		# Определяем, каким должен быть свет прямо сейчас (1 - вкл, 0 - выкл)
 		desired_light = 0 
