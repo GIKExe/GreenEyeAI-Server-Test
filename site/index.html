@@ -1,316 +1,431 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>GreenEye AI — Мониторинг (витрина)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    /* Все стили из предыдущей версии (без кнопок управления) */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #f0f2ee; min-height: 100vh; }
-    .burger { position: fixed; top: 16px; left: 16px; z-index: 1001; background: #1e2420; border: none; border-radius: 12px; width: 44px; height: 44px; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; cursor: pointer; }
-    .burger span { display: block; width: 24px; height: 2px; background: #7fc950; border-radius: 2px; transition: 0.2s; }
-    .burger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .burger.open span:nth-child(2) { opacity: 0; }
-    .burger.open span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
-    .overlay.active { display: block; }
-    .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 260px; background: #1e2420; display: flex; flex-direction: column; justify-content: space-between; padding: 24px 16px; flex-shrink: 0; transition: transform 0.3s ease; z-index: 1000; }
-    @media (max-width: 768px) { .sidebar { position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); z-index: 1000; } .sidebar.open { transform: translateX(0); } .burger { display: flex; } .content { padding-top: 70px !important; } }
-    .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #7fc950; margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
-    .nav { display: flex; flex-direction: column; gap: 6px; }
-    .nav-item { padding: 12px 16px; border-radius: 12px; color: #8fa888; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 12px; }
-    .nav-item i { width: 22px; }
-    .nav-item:hover, .nav-item.active { background: #3a4e34; color: #a8d87e; }
-    .sidebar-bottom { margin-top: auto; padding-top: 20px; }
-    .admin-link { background: #2c352a; color: #a8d87e; border-radius: 12px; padding: 12px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; cursor: pointer; }
-    .main { flex: 1; background: #f0f2ee; }
-    .content { padding: 24px; }
-    .section { display: none; }
-    .section.active-section { display: block; }
-    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-    .card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .card-header i { font-size: 28px; color: #7a9e3f; }
-    .sensor-value { font-size: 2rem; font-weight: 700; margin: 8px 0; }
-    .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 12px 0; }
-    .progress-fill { height: 100%; background: #7a9e3f; border-radius: 10px; }
-    .shelf-row { background: #fff; border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-    .shelf-info { display: flex; flex-direction: column; gap: 4px; }
-    .shelf-title { font-weight: 700; }
-    .badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-success { background: #d6edbe; color: #4a7c20; }
-    .badge-danger { background: #ffd0cc; color: #b03020; }
-    .cameras-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
-    .camera-card { background: #2c352a; border-radius: 16px; padding: 16px; text-align: center; color: #8fa888; }
-    .camera-card i { font-size: 32px; margin-bottom: 8px; }
-    .schedule-item-view { background: #f7f9f5; border-radius: 16px; padding: 10px 16px; margin-top: 8px; display: flex; align-items: center; gap: 12px; }
-    .chart-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
-    .chart-card { flex: 1; min-width: 250px; }
-    @media (max-width: 480px) { .content { padding: 16px; padding-top: 70px; } .shelf-row { flex-direction: column; align-items: flex-start; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenEye AI — Мониторинг</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #48bb78;
+        }
+        
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: #48bb78;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav a:hover {
+            color: #48bb78;
+        }
+        
+        .nav a.admin-link {
+            color: #48bb78;
+            font-weight: 600;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Status Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+        
+        .status-label {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        
+        .status-value.online {
+            color: #48bb78;
+        }
+        
+        /* Relay Status */
+        .relay-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .relay-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+        
+        .relay-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .relay-status {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .relay-status.on {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .relay-status.off {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        /* Schedule Display */
+        .schedule-display {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+        
+        /* Camera */
+        .camera-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        
+        .camera-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-item {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 200px;
+        }
+        
+        .chart-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
 </head>
 <body>
-<button class="burger" id="burgerBtn"><span></span><span></span><span></span></button>
-<div class="overlay" id="overlay"></div>
-<div class="app">
-  <aside class="sidebar" id="sidebar">
-    <div>
-      <div class="sidebar-logo"><i class="fas fa-leaf"></i> GreenEye AI</div>
-      <nav class="nav">
-        <div class="nav-item active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Дашборд</div>
-        <div class="nav-item" data-section="shelves"><i class="fas fa-layer-group"></i> Полки</div>
-        <div class="nav-item" data-section="water"><i class="fas fa-tint"></i> Вода</div>
-        <div class="nav-item" data-section="light"><i class="fas fa-lightbulb"></i> Свет</div>
-        <div class="nav-item" data-section="diseases"><i class="fas fa-bug"></i> Заболевания</div>
-      </nav>
-    </div>
-    <div class="sidebar-bottom">
-      <div class="admin-link" onclick="window.location.href='admin/login.html'"><i class="fas fa-lock"></i> Вход для админа</div>
-    </div>
-  </aside>
-  <div class="main">
-    <div class="content">
-      <div id="dashboard" class="section active-section">
-        <div id="dashboardStats" class="dashboard-grid"></div>
-        <div class="chart-row">
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-chart-line"></i><h3>Уровень воды (история)</h3></div><canvas id="waterLevelChart" height="150"></canvas></div>
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-tint"></i><h3>Состояние полива</h3></div><canvas id="waterActiveChart" height="150"></canvas></div>
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-lightbulb"></i><h3>Состояние освещения</h3></div><canvas id="lightActiveChart" height="150"></canvas></div>
+    <header class="header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+            GreenEye AI
         </div>
-      </div>
-      <div id="shelves" class="section"><div id="shelvesList"></div></div>
-      <div id="water" class="section"><div id="waterInfo"></div></div>
-      <div id="light" class="section"><div id="lightInfo"></div></div>
-      <div id="diseases" class="section"><div id="diseasesInfo"></div></div>
-    </div>
-    <div style="padding:0 24px 24px 24px"><h3><i class="fas fa-video"></i> Камеры наблюдения</h3><div class="cameras-grid" id="camerasGrid"></div></div>
-  </div>
-</div>
-<script>
-  (() => {
-    const dashboardStats = document.getElementById('dashboardStats');
-    const shelvesList = document.getElementById('shelvesList');
-    const waterInfo = document.getElementById('waterInfo');
-    const lightInfo = document.getElementById('lightInfo');
-    const diseasesInfo = document.getElementById('diseasesInfo');
-    const camerasGrid = document.getElementById('camerasGrid');
-    const navItems = document.querySelectorAll('.nav-item');
+        <nav class="nav">
+            <a href="#dashboard">Дашборд</a>
+            <a href="#graphs">Графики</a>
+            <a href="#stream">Камеры</a>
+            <a href="admin.html" class="admin-link">Вход для админа</a>
+        </nav>
+    </header>
 
-    let charts = {};
-
-    // Меню
-    document.getElementById('burgerBtn').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('burgerBtn').classList.toggle('open');
-      document.getElementById('overlay').classList.toggle('active');
-    });
-    document.getElementById('overlay').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('burgerBtn').classList.remove('open');
-      document.getElementById('overlay').classList.remove('active');
-    });
-
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        navItems.forEach(n => n.classList.remove('active'));
-        item.classList.add('active');
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-        document.getElementById(item.dataset.section).classList.add('active-section');
-        if (window.innerWidth <= 768) {
-          document.getElementById('sidebar').classList.remove('open');
-          document.getElementById('burgerBtn').classList.remove('open');
-          document.getElementById('overlay').classList.remove('active');
-        }
-      });
-    });
-
-    async function api(url, method = 'GET', body = null) {
-      const options = {
-        method,
-        headers: { 'Content-Type': 'application/json' }
-      };
-      if (body) options.body = JSON.stringify(body);
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    }
-
-    function renderChart(canvasId, type, dataPoints, label, color, stepped = false) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas || !dataPoints || dataPoints.length < 2) return;
-      if (charts[canvasId]) charts[canvasId].destroy();
-      const labels = dataPoints.map(p => new Date(p[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      const data = dataPoints.map(p => p[1]);
-      charts[canvasId] = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label,
-            data,
-            borderColor: color,
-            backgroundColor: color.replace(')', ',0.1)').replace('rgb', 'rgba'),
-            tension: 0.2,
-            fill: true,
-            stepped: stepped ? 'middle' : false,
-            borderWidth: 2
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: true, scales: { y: { min: stepped ? -0.1 : undefined, max: stepped ? 1.1 : undefined } } }
-      });
-    }
-
-    async function updateAll() {
-      try {
-        const [status, mode, relays] = await Promise.all([
-          api('/api/status'),
-          api('/api/command/mode'),
-          api('/api/last_state')
-        ]);
-        let schedule = null;
-        try { schedule = await api('/api/schedule'); } catch (e) {}
-
-        let ph = '–';
-        try {
-          const phRes = await fetch('/api/ph');
-          if (phRes.ok) {
-            const phData = await phRes.json();
-            ph = phData.ph !== undefined ? phData.ph.toFixed(1) : '–';
-          }
-        } catch (e) {}
-
-        const uptimeH = Math.floor(status.uptime / 3600);
-        const uptimeM = Math.floor((status.uptime % 3600) / 60);
-        const scheduleStr = schedule
-          ? `Свет ${schedule.light.start}-${schedule.light.end}, Полив каждые ${schedule.water.interval_hours}ч по ${schedule.water.duration_minutes}мин`
-          : 'Расписание недоступно';
-
-        dashboardStats.innerHTML = `
-          <div class="card">
-            <div class="card-header"><i class="fas fa-server"></i><h3>Статус системы</h3></div>
-            <div class="sensor-value" style="font-size:1.2rem;">Сервер: ${status.status.toUpperCase()}</div>
-            <div class="sensor-value" style="font-size:1.2rem;">БД: ${status.db_status.toUpperCase()}</div>
-            <div class="sensor-value" style="font-size:1rem;">Режим: ${mode.mode.toUpperCase()}</div>
-            <div class="sensor-value" style="font-size:1rem;">Аптайм: ${uptimeH}ч ${uptimeM}м</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;"><i class="fas fa-flask" style="color:#7a9e3f;"></i> pH: ${ph}</div>
-          </div>
-          <div class="card">
-            <div class="card-header"><i class="fas fa-plug"></i><h3>Реле</h3></div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <span class="badge ${relays.water ? 'badge-success' : 'badge-danger'}">💧 Вода ${relays.water ? 'ON' : 'OFF'}</span>
-              <span class="badge ${relays.light ? 'badge-success' : 'badge-danger'}">💡 Свет ${relays.light ? 'ON' : 'OFF'}</span>
-              <span class="badge ${relays.fan ? 'badge-success' : 'badge-danger'}">🌀 Вент. ${relays.fan ? 'ON' : 'OFF'}</span>
-            </div>
-            <div style="font-size:0.9rem;">${scheduleStr}</div>
-          </div>
-        `;
-
-        // Графики
-        try {
-          const waterData = await api('/api/graph/table', 'POST', { table: 'water', seconds: 86400 });
-          if (Array.isArray(waterData)) {
-            renderChart('waterLevelChart', 'line', waterData, 'Уровень воды (0/1)', '#7a9e3f');
-            renderChart('waterActiveChart', 'line', waterData, 'Полив', '#3498db', true);
-          }
-        } catch (e) {}
-
-        try {
-          const lightData = await api('/api/graph/table', 'POST', { table: 'light', seconds: 86400 });
-          if (Array.isArray(lightData)) {
-            renderChart('lightActiveChart', 'line', lightData, 'Освещение', '#f1c40f', true);
-          }
-        } catch (e) {}
-
-        // Полки
-        try {
-          const plantsData = await api('/api/plants');
-          const plants = plantsData.plants || [];
-          shelvesList.innerHTML = plants.length === 0
-            ? '<div class="card">Нет растений</div>'
-            : plants.map(p => `
-              <div class="shelf-row">
-                <div class="shelf-info">
-                  <div class="shelf-title">Полка №${p.position} (ID ${p.plant_id})</div>
-                  <div style="font-size:0.85rem;color:#666;">Обновлено: ${new Date(p.last_update).toLocaleString()}</div>
+    <main class="container">
+        <!-- System Status -->
+        <section class="section" id="dashboard">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                Состояние системы
+            </h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Сервер</div>
+                    <div class="status-value online" id="server-status">...</div>
                 </div>
-                <span class="badge ${p.status === 'healthy' ? 'badge-success' : 'badge-danger'}">${p.status.toUpperCase()}</span>
-              </div>
-            `).join('');
-        } catch (e) { shelvesList.innerHTML = '<div class="card">Раздел временно недоступен</div>'; }
-
-        // Вода
-        if (schedule) {
-          waterInfo.innerHTML = `
-            <div class="card">
-              <div class="card-header"><i class="fas fa-tint"></i><h3>Полив</h3></div>
-              <p>Состояние: <span class="badge ${relays.water ? 'badge-success' : 'badge-danger'}">${relays.water ? 'ВКЛ' : 'ВЫКЛ'}</span></p>
-              <p>Расписание: каждые ${schedule.water.interval_hours}ч по ${schedule.water.duration_minutes}мин</p>
-            </div>
-          `;
-        } else {
-          waterInfo.innerHTML = '<div class="card">Нет данных о расписании</div>';
-        }
-
-        // Свет
-        if (schedule) {
-          lightInfo.innerHTML = `
-            <div class="card">
-              <div class="card-header"><i class="fas fa-lightbulb"></i><h3>Освещение</h3></div>
-              <p>Состояние: <span class="badge ${relays.light ? 'badge-success' : 'badge-danger'}">${relays.light ? 'ВКЛ' : 'ВЫКЛ'}</span></p>
-              <p>Расписание: ${schedule.light.start} – ${schedule.light.end}</p>
-              <p>Вентилятор: ${relays.fan ? 'Включён' : 'Выключен'}</p>
-            </div>
-          `;
-        } else {
-          lightInfo.innerHTML = '<div class="card">Нет данных о расписании</div>';
-        }
-
-        // Заболевания
-        try {
-          const [unhealthyRes, statusRes] = await Promise.all([
-            api('/api/plants?status=unhealthy'),
-            api('/api/plants/status')
-          ]);
-          const unhealthy = unhealthyRes.plants || [];
-          if (unhealthy.length === 0) {
-            diseasesInfo.innerHTML = '<div class="card">✅ Все растения здоровы</div>';
-          } else {
-            let html = '';
-            unhealthy.forEach(plant => {
-              const st = statusRes.plants?.find(p => p.plant_id === plant.plant_id);
-              html += `
-                <div class="card" style="border-left:4px solid #e74c3c; margin-bottom:12px;">
-                  <i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i>
-                  Растение #${plant.plant_id} (полка ${plant.position}): ${st ? st.diagnosis : plant.status}
-                  (уверенность: ${st ? st.confidence : '—'})
-                  ${st?.photo_url ? `<br><img src="${st.photo_url}" style="max-width:120px;border-radius:8px;margin-top:8px;">` : ''}
+                <div class="status-item">
+                    <div class="status-label">БД</div>
+                    <div class="status-value" id="db-status">...</div>
                 </div>
-              `;
-            });
-            diseasesInfo.innerHTML = html;
-          }
-        } catch (e) { diseasesInfo.innerHTML = '<div class="card">Раздел временно недоступен</div>'; }
+                <div class="status-item">
+                    <div class="status-label">Режим</div>
+                    <div class="status-value" id="sys-mode">...</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Аптайм</div>
+                    <div class="status-value" id="uptime">...</div>
+                </div>
+            </div>
+        </section>
 
-        // Камеры
-        camerasGrid.innerHTML = `
-          <div class="camera-card"><i class="fas fa-video"></i><div>Основная</div><img src="/api/stream" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-top:8px;" onerror="this.alt='Нет сигнала'"></div>
-          <div class="camera-card"><i class="fas fa-video"></i><div>Камера 2</div></div>
-          <div class="camera-card"><i class="fas fa-video"></i><div>Камера 3</div></div>
-          <div class="camera-card"><i class="fas fa-video"></i><div>Камера 4</div></div>
-        `;
-      } catch (e) {
-        console.error('Dashboard error:', e);
-      }
-    }
+        <!-- Relay Status -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                Реле (последнее состояние)
+            </h2>
+            <div class="relay-grid">
+                <div class="relay-item">
+                    <div class="relay-label">
+                        <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>
+                        Вода
+                    </div>
+                    <div class="relay-status off" id="rel-water">OFF</div>
+                </div>
+                <div class="relay-item">
+                    <div class="relay-label">
+                        <svg viewBox="0 0 24 24" fill="#ecc94b" style="width:24px;height:24px"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+                        Свет
+                    </div>
+                    <div class="relay-status off" id="rel-light">OFF</div>
+                </div>
+                <div class="relay-item">
+                    <div class="relay-label">
+                        <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                        Вентилятор
+                    </div>
+                    <div class="relay-status off" id="rel-fan">OFF</div>
+                </div>
+            </div>
+        </section>
 
-    updateAll();
-    setInterval(updateAll, 10000);
-  })();
-</script>
+        <!-- Schedule -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                Расписание
+            </h2>
+            <div class="schedule-display" id="schedule-display">Загрузка...</div>
+        </section>
+
+        <!-- Charts -->
+        <section class="section" id="graphs">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                Уровень воды (история)
+            </h2>
+            <div class="charts-grid">
+                <div class="chart-item">
+                    <div class="chart-title">Уровень воды (%)</div>
+                    <div id="water-chart">Загрузка данных...</div>
+                </div>
+                <div class="chart-item">
+                    <div class="chart-title">Состояние полива</div>
+                    <div id="water-state-chart">Загрузка данных...</div>
+                </div>
+                <div class="chart-item">
+                    <div class="chart-title">Состояние освещения</div>
+                    <div id="light-state-chart">Загрузка данных...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Camera -->
+        <section class="section" id="stream">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="#2d3748" style="width:24px;height:24px"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                Камеры наблюдения
+            </h2>
+            <div class="camera-container">
+                <img id="camera-stream" src="/api/stream" alt="Поток с камеры">
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function apiGet(endpoint) {
+            try {
+                const res = await fetch(endpoint);
+                return res.ok ? await res.json() : null;
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+        
+        function formatUptime(sec) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            return `${h}ч ${m}м`;
+        }
+        
+        async function updateDashboard() {
+            const [relays, schedule] = await Promise.all([
+                // apiGet('/api/guest/status'),
+                // apiGet('/api/status'),
+                apiGet('/api/last_state'),
+                apiGet('/api/schedule')
+            ]);
+
+            // if (server) {
+            //     document.getElementById('server-status').textContent = server.status || '...';
+            //     document.getElementById('db-status').textContent = server.db_status || '...';
+            //     document.getElementById('uptime').textContent = formatUptime(server.uptime || 0);
+            // }
+            
+            // if (status) {
+            //     document.getElementById('sys-mode').textContent = (status.mode || '...').toUpperCase();
+            // }
+            
+            if (relays) {
+                const state = v => v == 1 ? 'ON' : 'OFF';
+                const statusClass = v => v == 1 ? 'on' : 'off';
+                
+                const waterEl = document.getElementById('rel-water');
+                waterEl.textContent = state(relays.water);
+                waterEl.className = `relay-status ${statusClass(relays.water)}`;
+                
+                const lightEl = document.getElementById('rel-light');
+                lightEl.textContent = state(relays.light);
+                lightEl.className = `relay-status ${statusClass(relays.light)}`;
+                
+                const fanEl = document.getElementById('rel-fan');
+                fanEl.textContent = state(relays.fan);
+                fanEl.className = `relay-status ${statusClass(relays.fan)}`;
+            }
+            
+            if (schedule) {
+                document.getElementById('schedule-display').textContent = JSON.stringify(schedule, null, 2);
+            }
+            
+            // Load charts
+            await loadCharts();
+        }
+        
+        async function loadCharts() {
+            // const waterData = await apiGet('/api/graph/table?table=water&seconds=600');
+            // if (waterData && waterData.table) {
+            //     document.getElementById('water-chart').innerHTML = `Данных: ${waterData.table.length} записей за последние 10 минут`;
+            // }
+
+            try {
+                const response = await fetch('/api/graph/table', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        'table': 'water',
+                        'seconds': 10*60
+                    })
+                });
+
+                // Проверка статуса (2xx)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Данные получены:', data);
+                document.getElementById('water-chart').innerHTML = `Данных: ${data} записей за последние 10 минут`;
+            } catch (error) {
+                console.error('Ошибка запроса:', error.message);
+                // Дополнительная обработка ошибок (сеть, таймаут и т.д.)
+            }
+            
+            // const fanData = await apiGet('/api/graph/table?table=fan&seconds=600');
+            // if (fanData && fanData.table) {
+            //     document.getElementById('water-state-chart').innerHTML = `Данных: ${fanData.table.length} записей за последние 10 минут`;
+            // }
+            
+            // const lightData = await apiGet('/api/graph/table?table=light&seconds=600');
+            // if (lightData && lightData.table) {
+            //     document.getElementById('light-state-chart').innerHTML = `Данных: ${lightData.table.length} записей за последние 10 минут`;
+            // }
+        }
+        
+        // Initial load
+        updateDashboard();
+        setInterval(updateDashboard, 5000); // Update every 5 seconds
+    </script>
 </body>
 </html>

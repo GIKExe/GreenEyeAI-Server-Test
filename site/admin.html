@@ -1,539 +1,543 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>GreenEye AI — Админ панель</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: #f0f2ee; min-height: 100vh; }
-    .burger { position: fixed; top: 16px; left: 16px; z-index: 1001; background: #1e2420; border: none; border-radius: 12px; width: 44px; height: 44px; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; cursor: pointer; }
-    .burger span { display: block; width: 24px; height: 2px; background: #7fc950; border-radius: 2px; transition: 0.2s; }
-    .burger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .burger.open span:nth-child(2) { opacity: 0; }
-    .burger.open span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
-    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
-    .overlay.active { display: block; }
-    .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 260px; background: #1e2420; display: flex; flex-direction: column; justify-content: space-between; padding: 24px 16px; flex-shrink: 0; transition: transform 0.3s ease; z-index: 1000; }
-    @media (max-width: 768px) { .sidebar { position: fixed; top: 0; left: 0; height: 100%; transform: translateX(-100%); z-index: 1000; } .sidebar.open { transform: translateX(0); } .burger { display: flex; } .content { padding-top: 70px !important; } }
-    .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #7fc950; margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
-    .nav { display: flex; flex-direction: column; gap: 6px; }
-    .nav-item { padding: 12px 16px; border-radius: 12px; color: #8fa888; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 12px; }
-    .nav-item i { width: 22px; }
-    .nav-item:hover, .nav-item.active { background: #3a4e34; color: #a8d87e; }
-    .logout-btn { background: #2c352a; color: #a8d87e; border: none; border-radius: 12px; padding: 12px; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; }
-    .main { flex: 1; background: #f0f2ee; }
-    .content { padding: 24px; }
-    .dashboard-grid, .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-    .card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .card-header i { font-size: 28px; color: #7a9e3f; }
-    .sensor-value { font-size: 2rem; font-weight: 700; margin: 8px 0; }
-    .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 12px 0; }
-    .progress-fill { height: 100%; background: #7a9e3f; border-radius: 10px; transition: width 0.3s; }
-    .toggle-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 8px 0; }
-    .toggle-label { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-    .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; inset: 0; background: #bbb; border-radius: 34px; cursor: pointer; transition: 0.2s; }
-    .slider:before { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
-    input:checked + .slider { background: #7a9e3f; }
-    input:checked + .slider:before { transform: translateX(24px); }
-    button.icon-btn { background: #f0f2ee; border: none; padding: 10px 16px; border-radius: 40px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; transition: 0.2s; }
-    button.icon-btn:hover { background: #e0e4dc; }
-    .schedule-item { background: #f7f9f5; border-radius: 16px; padding: 12px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .time-inputs { display: flex; gap: 12px; align-items: center; }
-    .shelf-row { background: #fff; border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-    .badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-success { background: #d6edbe; color: #4a7c20; }
-    .badge-danger { background: #ffd0cc; color: #b03020; }
-    .cameras-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
-    .camera-card { background: #2c352a; border-radius: 16px; padding: 16px; text-align: center; color: #8fa888; }
-    .camera-card i { font-size: 32px; margin-bottom: 8px; }
-    .chart-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
-    .chart-card { flex: 1; min-width: 250px; }
-    .manual-buttons { display: flex; gap: 12px; margin-top: 12px; margin-bottom: 16px; }
-    @media (max-width: 480px) { .content { padding: 16px; padding-top: 70px; } .shelf-row { flex-direction: column; align-items: flex-start; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenEye AI — Админ панель</title>
+    <style>
+        :root {
+            --primary: #48bb78;
+            --primary-hover: #38a169;
+            --danger: #f56565;
+            --danger-hover: #e53e3e;
+            --bg-body: #f7fafc;
+            --bg-card: #ffffff;
+            --text-main: #2d3748;
+            --text-secondary: #718096;
+            --sidebar-bg: #1a1f2e;
+            --sidebar-text: #a0aec0;
+            --border-color: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-menu { padding: 20px 0; flex: 1; }
+
+        .nav-item {
+            padding: 14px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active { border-right: 3px solid var(--primary); }
+
+        .logout-btn {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            width: 100%;
+            text-align: left;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover { background: rgba(245, 101, 101, 0.1); }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        h1.page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        /* --- Grid & Cards --- */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .big-stat { font-size: 42px; font-weight: 700; }
+        .stat-label { color: var(--text-secondary); font-size: 14px; margin-top: 5px; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-on { background: #c6f6d5; color: #22543d; }
+        .status-off { background: #fed7d7; color: #742a2a; }
+        .status-auto { background: #bee3f8; color: #2a4365; }
+        .status-manual { background: #fefcbf; color: #744210; }
+
+        /* --- Controls Section --- */
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .device-row {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        .device-row:last-child { border-bottom: none; }
+
+        .device-info { min-width: 200px; }
+        .device-name { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        
+        .btn-group { display: flex; gap: 10px; }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-green { background: var(--primary); color: white; }
+        .btn-green:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+        
+        .btn-red { background: var(--danger); color: white; }
+        .btn-red:hover:not(:disabled) { background: var(--danger-hover); transform: translateY(-1px); }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .switch-track {
+            width: 44px; height: 24px; background: #cbd5e0;
+            border-radius: 12px; position: relative; transition: 0.3s;
+        }
+        .switch-thumb {
+            width: 20px; height: 20px; background: white;
+            border-radius: 50%; position: absolute; top: 2px; left: 2px;
+            transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .switch-track.active { background: var(--primary); }
+        .switch-track.active .switch-thumb { transform: translateX(20px); }
+
+        /* --- Schedule --- */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .schedule-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .schedule-input {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            margin-right: 5px;
+        }
+
+        /* --- Diseases --- */
+        .plants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .plant-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .plant-card.unhealthy { border-color: var(--danger); background: #fff5f5; }
+        .plant-card.healthy { border-color: var(--primary); background: #f0fff4; }
+
+        /* --- Utility --- */
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-<button class="burger" id="burgerBtn"><span></span><span></span><span></span></button>
-<div class="overlay" id="overlay"></div>
-<div class="app">
-  <aside class="sidebar" id="sidebar">
-    <div>
-      <div class="sidebar-logo"><i class="fas fa-leaf"></i> GreenEye AI Admin</div>
-      <nav class="nav">
-        <div class="nav-item active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Дашборд</div>
-        <div class="nav-item" data-section="shelves"><i class="fas fa-layer-group"></i> Полки</div>
-        <div class="nav-item" data-section="control"><i class="fas fa-sliders-h"></i> Управление</div>
-        <div class="nav-item" data-section="diseases"><i class="fas fa-bug"></i> Заболевания</div>
-      </nav>
-    </div>
-    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
-  </aside>
-  <div class="main">
-    <div class="content" id="mainContent"></div>
-    <div style="padding:0 24px 24px 24px"><h3><i class="fas fa-video"></i> Камеры</h3><div class="cameras-grid" id="camerasGrid"></div></div>
-  </div>
-</div>
-<script>
-  (() => {
-    const TOKEN = sessionStorage.getItem('adminToken');
-    if (!TOKEN) {
-      window.location.href = 'admin/login.html';
-      return;
-    }
 
-    let charts = {};
-
-    // Улучшенная функция запроса – НЕ пытается парсить JSON для пустых ответов
-    async function api(url, method = 'GET', body = null) {
-      const options = {
-        method,
-        headers: { 'Content-Type': 'application/json' }
-      };
-      if (body) options.body = JSON.stringify(body);
-      const res = await fetch(url, options);
-      if (!res.ok) {
-        let errorText = res.statusText;
-        try {
-          const errorJson = await res.json();
-          errorText = errorJson.detail || errorJson.message || JSON.stringify(errorJson);
-        } catch (e) {}
-        throw new Error(`Ошибка ${res.status}: ${errorText}`);
-      }
-      // Для ответов без тела (или 204) просто возвращаем null
-      const contentType = res.headers.get('content-type');
-      if (res.status === 204 || !contentType || !contentType.includes('application/json')) {
-        return null;
-      }
-      try {
-        return await res.json();
-      } catch (e) {
-        // если тело не json, тоже возвращаем null
-        return null;
-      }
-    }
-
-    // Бургер-меню и выход
-    document.getElementById('burgerBtn').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('burgerBtn').classList.toggle('open');
-      document.getElementById('overlay').classList.toggle('active');
-    });
-    document.getElementById('overlay').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('burgerBtn').classList.remove('open');
-      document.getElementById('overlay').classList.remove('active');
-    });
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem('adminToken');
-      window.location.href = 'admin/login.html';
-    });
-
-    // Навигация
-    let activeSection = 'dashboard';
-    function setActiveSection(section) {
-      activeSection = section;
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.section === section));
-      renderSection(section);
-    }
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', () => {
-        setActiveSection(item.dataset.section);
-        if (window.innerWidth <= 768) {
-          document.getElementById('sidebar').classList.remove('open');
-          document.getElementById('burgerBtn').classList.remove('open');
-          document.getElementById('overlay').classList.remove('active');
-        }
-      });
-    });
-
-    // ====== ДАШБОРД ======
-    async function renderDashboard() {
-      const container = document.getElementById('mainContent');
-      container.innerHTML = `
-        <div id="dashboardStats" class="dashboard-grid"></div>
-        <div class="chart-row">
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-chart-line"></i><h3>Уровень воды (история)</h3></div><canvas id="waterLevelChart" height="150"></canvas></div>
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-tint"></i><h3>Состояние полива</h3></div><canvas id="waterActiveChart" height="150"></canvas></div>
-          <div class="card chart-card"><div class="card-header"><i class="fas fa-lightbulb"></i><h3>Состояние освещения</h3></div><canvas id="lightActiveChart" height="150"></canvas></div>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22 6.66 19.7C7.14 19.87 7.64 20 8 20 19 20 22 3 22 3 21 5 14 5.25 9 6.25 4 7.25 2 11.5 2 13.5 2 15.5 3.75 17.25 3.75 17.25 7 8 17 8 17 8Z"/></svg>
+            GreenEye AI
         </div>
-      `;
-      await loadDashboardData();
-    }
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active">Дашборд</a>
+            <a href="#diseases" class="nav-item" onclick="showDiseases()">Заболевания</a>
+            <a href="index.html" class="nav-item">Мониторинг</a>
+        </nav>
+        <button class="logout-btn" onclick="logout()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            Выйти
+        </button>
+    </aside>
 
-    async function loadDashboardData() {
-      try {
-        const [status, mode, relays] = await Promise.all([
-          api('/api/status'),
-          api('/api/command/mode'),
-          api('/api/last_state')
-        ]);
-        let schedule = null;
-        try { schedule = await api('/api/schedule'); } catch (e) {}
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">Управление системой</h1>
 
-        let ph = '–';
-        try {
-          const phRes = await fetch('/api/ph');
-          if (phRes.ok) {
-            const phData = await phRes.json();
-            ph = phData.ph !== undefined ? phData.ph.toFixed(1) : '–';
-          }
-        } catch (e) {}
-
-        const uptimeH = Math.floor(status.uptime / 3600);
-        const uptimeM = Math.floor((status.uptime % 3600) / 60);
-        const scheduleHTML = schedule
-          ? `Свет ${schedule.light.start}-${schedule.light.end}, вода каждые ${schedule.water.interval_hours}ч/${schedule.water.duration_minutes}мин`
-          : 'Расписание недоступно';
-
-        document.getElementById('dashboardStats').innerHTML = `
-          <div class="card">
-            <div class="card-header"><i class="fas fa-server"></i><h3>Система</h3></div>
-            <p>Сервер: ${status.status.toUpperCase()} | БД: ${status.db_status.toUpperCase()}</p>
-            <p>Режим: <strong>${mode.mode.toUpperCase()}</strong></p>
-            <p>Аптайм: ${uptimeH}ч ${uptimeM}м</p>
-            <p style="display:flex;align-items:center;gap:8px;"><i class="fas fa-flask" style="color:#7a9e3f;"></i> pH: ${ph}</p>
-          </div>
-          <div class="card">
-            <div class="card-header"><i class="fas fa-plug"></i><h3>Реле</h3></div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;">
-              <span class="badge ${relays.water ? 'badge-success' : 'badge-danger'}">💧 Вода ${relays.water ? 'ON' : 'OFF'}</span>
-              <span class="badge ${relays.light ? 'badge-success' : 'badge-danger'}">💡 Свет ${relays.light ? 'ON' : 'OFF'}</span>
-              <span class="badge ${relays.fan ? 'badge-success' : 'badge-danger'}">🌀 Вент. ${relays.fan ? 'ON' : 'OFF'}</span>
-            </div>
-            <p style="font-size:0.9rem;">${scheduleHTML}</p>
-          </div>
-        `;
-
-        await loadCharts();
-      } catch (e) {
-        document.getElementById('dashboardStats').innerHTML = '<div class="card">Ошибка загрузки дашборда</div>';
-        console.error(e);
-      }
-    }
-
-    async function loadCharts() {
-      try {
-        const waterData = await api('/api/graph/table', 'POST', { table: 'water', seconds: 86400 });
-        renderChart('waterLevelChart', 'line', waterData, 'Уровень воды (0/1)', '#7a9e3f');
-        renderChart('waterActiveChart', 'line', waterData, 'Полив', '#3498db', true);
-      } catch (e) {}
-      try {
-        const lightData = await api('/api/graph/table', 'POST', { table: 'light', seconds: 86400 });
-        renderChart('lightActiveChart', 'line', lightData, 'Освещение', '#f1c40f', true);
-      } catch (e) {}
-    }
-
-    function renderChart(canvasId, type, dataPoints, label, color, stepped = false) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas || !dataPoints || dataPoints.length < 2) return;
-      if (charts[canvasId]) charts[canvasId].destroy();
-      const labels = dataPoints.map(p => new Date(p[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      const data = dataPoints.map(p => p[1]);
-      charts[canvasId] = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label,
-            data,
-            borderColor: color,
-            backgroundColor: color.replace(')', ',0.1)').replace('rgb', 'rgba'),
-            tension: 0.2,
-            fill: true,
-            stepped: stepped ? 'middle' : false,
-            borderWidth: 2
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: true, scales: { y: { min: stepped ? -0.1 : undefined, max: stepped ? 1.1 : undefined } } }
-      });
-    }
-
-    // ====== ПОЛКИ ======
-    async function renderShelves() {
-      const container = document.getElementById('mainContent');
-      container.innerHTML = '<div id="shelvesList"></div>';
-      try {
-        const data = await api('/api/plants');
-        const plants = data.plants || [];
-        document.getElementById('shelvesList').innerHTML = plants.length === 0
-          ? '<div class="card">Нет растений</div>'
-          : plants.map(p => `
-            <div class="shelf-row">
-              <div class="shelf-info">
-                <div class="shelf-title">Полка №${p.position} (ID ${p.plant_id})</div>
-                <div style="font-size:0.85rem;color:#666;">Обновлено: ${new Date(p.last_update).toLocaleString()}</div>
-              </div>
-              <span class="badge ${p.status === 'healthy' ? 'badge-success' : 'badge-danger'}">${p.status.toUpperCase()}</span>
-            </div>
-          `).join('');
-      } catch (e) {
-        container.innerHTML = '<div class="card">Раздел временно недоступен</div>';
-        console.error(e);
-      }
-    }
-
-    // ====== УПРАВЛЕНИЕ ======
-    async function renderControl() {
-      const container = document.getElementById('mainContent');
-      container.innerHTML = '<div id="controlContent"></div>';
-      await loadControlContent();
-    }
-
-    async function loadControlContent() {
-      try {
-        const [mode, relays] = await Promise.all([
-          api('/api/command/mode'),
-          api('/api/last_state')
-        ]);
-        let schedule = null;
-        try { schedule = await api('/api/schedule'); } catch (e) {}
-
-        const controlDiv = document.getElementById('controlContent');
-        controlDiv.innerHTML = `
-          <div class="dashboard-grid" style="margin-bottom:20px">
+        <!-- Top Stats -->
+        <div class="grid-4">
             <div class="card">
-              <div class="card-header"><i class="fas fa-water"></i><h3>Уровень воды</h3></div>
-              <div class="sensor-value">—</div>
+                <div class="card-header">💧 Уровень воды</div>
+                <div class="big-stat" id="water-level">--%</div>
+                <div class="stat-label">В баке</div>
             </div>
             <div class="card">
-              <div class="card-header"><i class="fas fa-tint"></i><h3>Полив (текущее)</h3></div>
-              <div class="sensor-value">${relays.water ? '🔵 ВКЛ' : '⚪ ВЫКЛ'}</div>
-              <div>Режим: ${mode.mode === 'auto' ? 'Авто' : 'Ручной'}</div>
+                <div class="card-header">🚿 Полив</div>
+                <div id="water-status" class="big-stat">--</div>
+                <div class="stat-label">Режим: <span id="water-mode-label">...</span></div>
             </div>
             <div class="card">
-              <div class="card-header"><i class="fas fa-lightbulb"></i><h3>Освещение (текущее)</h3></div>
-              <div class="sensor-value">${relays.light ? '💡 ВКЛ' : '🌙 ВЫКЛ'}</div>
-              <div>Режим: ${mode.mode === 'auto' ? 'Авто' : 'Ручной'}</div>
-              <div><i class="fas fa-fan"></i> Вентилятор: ${relays.fan ? 'Вкл' : 'Выкл'}</div>
-            </div>
-          </div>
-          <div class="controls-grid">
-            <div class="card">
-              <div class="card-header"><i class="fas fa-tint"></i><h3>Управление поливом</h3></div>
-              <div class="manual-buttons">
-                <button id="waterOnBtn" class="icon-btn" style="background:#7a9e3f; color:white"><i class="fas fa-play"></i> Включить</button>
-                <button id="waterOffBtn" class="icon-btn" style="background:#e74c3c; color:white"><i class="fas fa-stop"></i> Выключить</button>
-              </div>
-              <div class="toggle-group">
-                <div class="toggle-label"><i class="fas fa-water"></i> Автоматический режим</div>
-                <label class="switch"><input type="checkbox" id="waterAutoToggle" ${mode.mode === 'auto' ? 'checked' : ''}><span class="slider"></span></label>
-              </div>
+                <div class="card-header">💡 Освещение</div>
+                <div id="light-status" class="big-stat">--</div>
+                <div class="stat-label">Режим: <span id="light-mode-label">...</span></div>
             </div>
             <div class="card">
-              <div class="card-header"><i class="fas fa-lightbulb"></i><h3>Управление освещением</h3></div>
-              <div class="manual-buttons">
-                <button id="lightOnBtn" class="icon-btn" style="background:#7a9e3f; color:white"><i class="fas fa-play"></i> Включить</button>
-                <button id="lightOffBtn" class="icon-btn" style="background:#e74c3c; color:white"><i class="fas fa-stop"></i> Выключить</button>
-              </div>
-              <div class="toggle-group">
-                <div class="toggle-label"><i class="fas fa-sun"></i> Автоматический режим</div>
-                <label class="switch"><input type="checkbox" id="lightAutoToggle" ${mode.mode === 'auto' ? 'checked' : ''}><span class="slider"></span></label>
-              </div>
-              <div class="toggle-group">
-                <div class="toggle-label"><i class="fas fa-fan"></i> Вентилятор</div>
-                <label class="switch"><input type="checkbox" id="fanToggle" ${relays.fan ? 'checked' : ''}><span class="slider"></span></label>
-              </div>
+                <div class="card-header">🌀 Вентилятор</div>
+                <div id="fan-status" class="big-stat">--</div>
+                <div class="stat-label">Режим: <span id="fan-mode-label">...</span></div>
             </div>
-            <div class="card">
-              <div class="card-header"><i class="fas fa-cog"></i><h3>Расписание</h3></div>
-              ${schedule ? `
-                <div class="schedule-item">
-                  <span><i class="fas fa-lightbulb"></i> Свет</span>
-                  <div class="time-inputs">
-                    <input type="time" id="lightStart" value="${schedule.light.start}">
-                    <span>–</span>
-                    <input type="time" id="lightEnd" value="${schedule.light.end}">
-                  </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-panel">
+            <div class="card-header"> Панель управления</div>
+            
+            <!-- Water Control -->
+            <div class="device-row">
+                <div class="device-info">
+                    <div class="device-name">💧 Полив</div>
                 </div>
-                <div class="schedule-item">
-                  <span><i class="fas fa-tint"></i> Полив</span>
-                  <div class="time-inputs">
-                    <input type="number" id="waterInterval" value="${schedule.water.interval_hours}" min="1" style="width:60px;"> ч
-                    <input type="number" id="waterDuration" value="${schedule.water.duration_minutes}" min="1" style="width:60px;"> мин
-                  </div>
+                <div class="btn-group">
+                    <button class="btn btn-green" onclick="controlDevice('water', 'on')">ВКЛ</button>
+                    <button class="btn btn-red" onclick="controlDevice('water', 'off')">ВЫКЛ</button>
                 </div>
-                <button id="saveScheduleBtn" class="icon-btn" style="width:100%; margin-top:12px;"><i class="fas fa-save"></i> Сохранить</button>
-              ` : '<p>Расписание недоступно</p>'}
+                <label class="toggle-switch" onclick="toggleSystemMode()">
+                    <span>Автоматический режим</span>
+                    <div class="switch-track" id="mode-toggle">
+                        <div class="switch-thumb"></div>
+                    </div>
+                </label>
             </div>
-          </div>
-        `;
 
-        let currentMode = mode.mode;
+            <!-- Light Control -->
+            <div class="device-row">
+                <div class="device-info">
+                    <div class="device-name">💡 Освещение</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-green" onclick="controlDevice('light', 'on')">ВКЛ</button>
+                    <button class="btn btn-red" onclick="controlDevice('light', 'off')">ВЫКЛ</button>
+                </div>
+                <div class="stat-label">
+                    <span id="light-state-text">Состояние: ...</span>
+                </div>
+            </div>
 
-        async function sendRelayCommand(device, state) {
-          try {
-            if (currentMode === 'auto') {
-              // Сначала переключаемся в manual
-              await api('/api/command/mode', 'POST', { token: TOKEN, mode: 'manual' });
-              currentMode = 'manual';
-              const w = document.getElementById('waterAutoToggle');
-              const l = document.getElementById('lightAutoToggle');
-              if (w) w.checked = false;
-              if (l) l.checked = false;
-            }
-            // Отправляем команду на реле
-            await api(`/api/command/${device}`, 'POST', { token: TOKEN, state });
-          } catch (e) {
-            alert(`Не удалось управлять ${device}: ${e.message}`);
-          }
+            <!-- Fan Control -->
+            <div class="device-row">
+                <div class="device-info">
+                    <div class="device-name">🌀 Вентилятор</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-green" onclick="controlDevice('fan', 'on')">ВКЛ</button>
+                    <button class="btn btn-red" onclick="controlDevice('fan', 'off')">ВЫКЛ</button>
+                </div>
+                <div class="stat-label">
+                    <span id="fan-state-text">Состояние: ...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="control-panel">
+            <div class="card-header">📅 Расписание (Авто)</div>
+            <div class="schedule-grid">
+                <div class="schedule-card">
+                    <strong>💡 Свет</strong><br>
+                    С: <input type="time" id="sched-light-start" class="schedule-input">
+                    По: <input type="time" id="sched-light-end" class="schedule-input">
+                </div>
+                <div class="schedule-card">
+                    <strong>🌀 Вентилятор</strong><br>
+                    Интервал (ч): <input type="number" id="sched-fan-int" class="schedule-input" min="1" style="width: 60px">
+                    Длительность (мин): <input type="number" id="sched-fan-dur" class="schedule-input" min="1" style="width: 60px">
+                </div>
+                <div class="schedule-card">
+                    <strong>💧 Полив</strong><br>
+                    Интервал (ч): <input type="number" id="sched-water-int" class="schedule-input" min="1" style="width: 60px">
+                    Длительность (мин): <input type="number" id="sched-water-dur" class="schedule-input" min="1" style="width: 60px">
+                </div>
+            </div>
+            <button class="btn btn-green" style="margin-top: 15px;" onclick="saveSchedule()">Сохранить расписание</button>
+        </div>
+
+        <!-- Diseases Section -->
+        <div class="control-panel hidden" id="diseases-panel">
+            <div class="card-header"> Статус растений</div>
+            <div id="plants-container" class="plants-grid">Загрузка...</div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- Auth & Cookies ---
+        function getToken() {
+            const match = document.cookie.match(/admin_token=([^;]+)/);
+            return match ? match[1] : null;
         }
 
-        // Явно проверяем существование элементов перед привязкой
-        const btnWaterOn = document.getElementById('waterOnBtn');
-        const btnWaterOff = document.getElementById('waterOffBtn');
-        const btnLightOn = document.getElementById('lightOnBtn');
-        const btnLightOff = document.getElementById('lightOffBtn');
-        if (btnWaterOn) btnWaterOn.addEventListener('click', () => sendRelayCommand('water', 'on'));
-        if (btnWaterOff) btnWaterOff.addEventListener('click', () => sendRelayCommand('water', 'off'));
-        if (btnLightOn) btnLightOn.addEventListener('click', () => sendRelayCommand('light', 'on'));
-        if (btnLightOff) btnLightOff.addEventListener('click', () => sendRelayCommand('light', 'off'));
+        if (!getToken()) window.location.href = '/admin/login';
 
-        const waterAutoToggle = document.getElementById('waterAutoToggle');
-        const lightAutoToggle = document.getElementById('lightAutoToggle');
-        const fanToggle = document.getElementById('fanToggle');
-
-        if (waterAutoToggle) {
-          waterAutoToggle.addEventListener('change', async function() {
-            const newMode = this.checked ? 'auto' : 'manual';
-            try {
-              await api('/api/command/mode', 'POST', { token: TOKEN, mode: newMode });
-              currentMode = newMode;
-              if (lightAutoToggle) lightAutoToggle.checked = this.checked;
-            } catch (e) {
-              alert('Ошибка смены режима: ' + e.message);
-              this.checked = !this.checked; // откатываем
-            }
-          });
+        function logout() {
+            document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/admin/login';
         }
 
-        if (lightAutoToggle) {
-          lightAutoToggle.addEventListener('change', async function() {
-            const newMode = this.checked ? 'auto' : 'manual';
-            try {
-              await api('/api/command/mode', 'POST', { token: TOKEN, mode: newMode });
-              currentMode = newMode;
-              if (waterAutoToggle) waterAutoToggle.checked = this.checked;
-            } catch (e) {
-              alert('Ошибка смены режима: ' + e.message);
-              this.checked = !this.checked;
-            }
-          });
+        // --- API Calls ---
+        async function apiPost(url, body = {}) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: getToken(), ...body })
+            });
+            return res.ok;
         }
 
-        if (fanToggle) {
-          fanToggle.addEventListener('change', async function() {
-            const state = this.checked ? 'on' : 'off';
-            try {
-              await api('/api/command/fan', 'POST', { token: TOKEN, state });
-            } catch (e) {
-              alert('Ошибка управления вентилятором: ' + e.message);
-              this.checked = !this.checked;
-            }
-          });
+        async function apiGet(url) {
+            const res = await fetch(url);
+            return res.ok ? res.json() : null;
         }
 
-        const saveBtn = document.getElementById('saveScheduleBtn');
-        if (schedule && saveBtn) {
-          saveBtn.addEventListener('click', async () => {
-            const payload = {
-              token: TOKEN,
-              light: { start: document.getElementById('lightStart').value, end: document.getElementById('lightEnd').value },
-              water: {
-                interval_hours: Number(document.getElementById('waterInterval').value),
-                duration_minutes: Number(document.getElementById('waterDuration').value)
-              },
-              fan: schedule.fan || { interval_hours: 2, duration_minutes: 5 }
+        // --- State ---
+        let currentMode = 'auto';
+
+        // --- UI Updates ---
+        function updateUI(mode, relays) {
+            currentMode = mode;
+            const isAuto = mode === 'auto';
+            
+            // Toggle visual
+            const toggle = document.getElementById('mode-toggle');
+            toggle.classList.toggle('active', isAuto);
+            
+            // Labels
+            const modeText = isAuto ? 'Автоматический' : 'Ручной';
+            document.getElementById('water-mode-label').textContent = modeText;
+            document.getElementById('light-mode-label').textContent = modeText;
+            document.getElementById('fan-mode-label').textContent = modeText;
+
+            // Relays Status
+            const setStatus = (id, val) => {
+                const el = document.getElementById(id);
+                el.textContent = val === 1 ? 'ВКЛ' : 'ВЫКЛ';
+                el.style.color = val === 1 ? 'var(--primary)' : 'var(--danger)';
             };
-            try {
-              await api('/api/schedule', 'POST', payload);
-              alert('Расписание сохранено');
-            } catch (e) {
-              alert('Ошибка сохранения: ' + e.message);
+
+            if (relays) {
+                setStatus('water-status', relays.water);
+                setStatus('light-status', relays.light);
+                setStatus('fan-status', relays.fan);
+                
+                document.getElementById('light-state-text').textContent = `Состояние: ${relays.light ? 'ВКЛ' : 'ВЫКЛ'}`;
+                document.getElementById('fan-state-text').textContent = `Состояние: ${relays.fan ? 'ВКЛ' : 'ВЫКЛ'}`;
             }
-          });
         }
-      } catch (e) {
-        document.getElementById('controlContent').innerHTML = '<div class="card">Ошибка загрузки управления</div>';
-        console.error(e);
-      }
-    }
 
-    // ====== ЗАБОЛЕВАНИЯ ======
-    async function renderDiseases() {
-      const container = document.getElementById('mainContent');
-      container.innerHTML = '<div id="diseasesContent"></div>';
-      try {
-        const [unhealthyRes, statusRes] = await Promise.all([
-          api('/api/plants?status=unhealthy'),
-          api('/api/plants/status')
-        ]);
-        const unhealthy = unhealthyRes.plants || [];
-        let html = '';
-        if (unhealthy.length === 0) {
-          html = '<div class="card">✅ Все растения здоровы</div>';
-        } else {
-          unhealthy.forEach(plant => {
-            const st = statusRes.plants?.find(p => p.plant_id === plant.plant_id);
-            html += `
-              <div class="card" style="border-left:4px solid #e74c3c; margin-bottom:12px;">
-                <i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i>
-                Растение #${plant.plant_id} (полка ${plant.position}): ${st ? st.diagnosis : plant.status}
-                (уверенность: ${st ? st.confidence : '—'})
-                ${st?.photo_url ? `<br><img src="${st.photo_url}" style="max-width:120px;border-radius:8px;margin-top:8px;">` : ''}
-                <button class="icon-btn make-photo-btn" data-plant-id="${plant.plant_id}"><i class="fas fa-camera"></i> Сделать фото</button>
-              </div>
-            `;
-          });
+        // --- Actions ---
+        async function controlDevice(device, state) {
+            // В ручном режиме мы можем управлять напрямую
+            if (currentMode === 'auto') {
+                alert('Переключите режим в Ручной для прямого управления');
+                return;
+            }
+            
+            const success = await apiPost(`/api/command/${device}`, { state });
+            if (success) {
+                // Optimistic update
+                const val = state === 'on' ? 1 : 0;
+                const el = document.getElementById(`${device}-status`);
+                el.textContent = state === 'on' ? 'ВКЛ' : 'ВЫКЛ';
+                el.style.color = state === 'on' ? 'var(--primary)' : 'var(--danger)';
+            } else {
+                alert('Ошибка управления');
+            }
         }
-        document.getElementById('diseasesContent').innerHTML = html;
 
-        document.querySelectorAll('.make-photo-btn').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            const plantId = btn.dataset.plantId;
-            try {
-              await api('/api/admin/make_photo', 'POST', { token: TOKEN, plant_id: plantId });
-              alert('Фото сделано');
-            } catch (e) { alert('Ошибка: ' + e.message); }
-          });
-        });
-      } catch (e) {
-        container.innerHTML = '<div class="card">Раздел временно недоступен</div>';
-        console.error(e);
-      }
-    }
+        async function toggleSystemMode() {
+            const newMode = currentMode === 'auto' ? 'manual' : 'auto';
+            const success = await apiPost('/api/command/mode', { mode: newMode });
+            if (success) {
+                loadData(); // Refresh UI
+            }
+        }
 
-    function updateCameras() {
-      document.getElementById('camerasGrid').innerHTML = `
-        <div class="camera-card"><i class="fas fa-video"></i><div>Основная</div><img src="/api/stream" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-top:8px;" onerror="this.alt='Нет сигнала'"></div>
-        <div class="camera-card"><i class="fas fa-video"></i><div>Камера 2</div></div>
-        <div class="camera-card"><i class="fas fa-video"></i><div>Камера 3</div></div>
-        <div class="camera-card"><i class="fas fa-video"></i><div>Камера 4</div></div>
-      `;
-    }
+        async function saveSchedule() {
+            const data = {
+                light: {
+                    start: document.getElementById('sched-light-start').value,
+                    end: document.getElementById('sched-light-end').value
+                },
+                fan: {
+                    interval_hours: parseInt(document.getElementById('sched-fan-int').value),
+                    duration_minutes: parseInt(document.getElementById('sched-fan-dur').value)
+                },
+                water: {
+                    interval_hours: parseInt(document.getElementById('sched-water-int').value),
+                    duration_minutes: parseInt(document.getElementById('sched-water-dur').value)
+                }
+            };
+            
+            const success = await apiPost('/api/schedule', data);
+            alert(success ? 'Расписание сохранено' : 'Ошибка сохранения');
+        }
 
-    function renderSection(section) {
-      if (section === 'dashboard') renderDashboard();
-      else if (section === 'shelves') renderShelves();
-      else if (section === 'control') renderControl();
-      else if (section === 'diseases') renderDiseases();
-    }
+        function showDiseases() {
+            document.getElementById('diseases-panel').classList.remove('hidden');
+            loadDiseases();
+            document.querySelector('.nav-item.active').classList.remove('active');
+            event.target.classList.add('active');
+        }
 
-    setActiveSection('dashboard');
-    updateCameras();
+        async function loadDiseases() {
+            const data = await apiGet('/api/plants/status');
+            const container = document.getElementById('plants-container');
+            if (!data || !data.plants.length) {
+                container.innerHTML = '<p>Нет данных о растениях</p>';
+                return;
+            }
+            
+            container.innerHTML = data.plants.map(p => `
+                <div class="plant-card ${p.diagnosis}">
+                    <div style="font-size:24px">${p.diagnosis === 'healthy' ? '' : '⚠️'}</div>
+                    <strong>Позиция ${p.position}</strong><br>
+                    <span class="status-badge ${p.diagnosis === 'healthy' ? 'status-on' : 'status-off'}">${p.diagnosis}</span><br>
+                    <small>${new Date(p.last_diagnosis_at).toLocaleTimeString()}</small>
+                </div>
+            `).join('');
+        }
 
-    setInterval(() => {
-      if (activeSection === 'dashboard') loadDashboardData();
-      else if (activeSection === 'control') loadControlContent();
-    }, 10000);
-  })();
-</script>
+        // --- Load Data ---
+        async function loadData() {
+            // Parallel requests
+            const [modeData, relays, schedule, guestStatus] = await Promise.all([
+                apiGet('/api/command/mode'),
+                apiGet('/api/last_state'),
+                apiGet('/api/schedule'),
+                apiGet('/api/guest/status')
+            ]);
+
+            if (modeData) updateUI(modeData.mode, relays);
+            
+            if (schedule) {
+                document.getElementById('sched-light-start').value = schedule.light?.start || '';
+                document.getElementById('sched-light-end').value = schedule.light?.end || '';
+                document.getElementById('sched-fan-int').value = schedule.fan?.interval_hours || '';
+                document.getElementById('sched-fan-dur').value = schedule.fan?.duration_minutes || '';
+                document.getElementById('sched-water-int').value = schedule.water?.interval_hours || '';
+                document.getElementById('sched-water-dur').value = schedule.water?.duration_minutes || '';
+            }
+
+            if (guestStatus) {
+                document.getElementById('water-level').textContent = guestStatus.humidity ? `${guestStatus.humidity}%` : '--%';
+            }
+        }
+
+        // Init
+        loadData();
+        setInterval(loadData, 10000); // Refresh every 10s
+    </script>
 </body>
 </html>
