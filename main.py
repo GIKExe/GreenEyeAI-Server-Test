@@ -80,7 +80,7 @@ cluster = Cluster('site')
 if cluster is None:
 	error('Кластер повреждён!')
 	exit()
-server = Server(data, database, cluster)
+server = Server(data, database, cluster, port=8080)
 
 
 @nonblocking

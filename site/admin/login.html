@@ -167,7 +167,7 @@
         <div class="error-message" id="errorMsg">Неверный логин или пароль</div>
         
         <div class="back-link">
-            <a href="index.html">← На главную</a>
+            <a href="/">← На главную</a>
         </div>
     </div>
 
@@ -197,7 +197,7 @@
 
                 // Сохраняем токен в cookie
                 const expires = new Date(Date.now() + data.expires_in * 1000).toUTCString();
-                document.cookie = `admin_token=${data.token};expires=${expires};path=/`;
+                // document.cookie = `token=${data.token};expires=${expires};path=/`;
                 
                 window.location.href = '/admin';
             } catch (err) {
