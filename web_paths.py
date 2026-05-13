@@ -1,3 +1,4 @@
+import json
 from time import sleep
 from random import randint
 from datetime import datetime
@@ -132,8 +133,8 @@ def web_sshd_path(server: Server, client: Socket, req: Request) -> Response | No
 		(type(data['fan']['duration_minutes']) is not int)):
 		return Response(400)
 	try:
-		data['light']['start'] = datetime.strptime(data['light']['start'], "%H:%M").time()
-		data['light']['end'] = datetime.strptime(data['light']['end'], "%H:%M").time()
+		datetime.strptime(data['light']['start'], "%H:%M").time()
+		datetime.strptime(data['light']['end'], "%H:%M").time()
 	except:  # noqa: E722
 		return Response(400)
 	server.data.schedule = {
@@ -150,26 +151,16 @@ def web_sshd_path(server: Server, client: Socket, req: Request) -> Response | No
 			'duration_minutes': data['water']['duration_minutes'],
 		},
 	}
+	info('Расписание сохранено')
+	with open('schedule.json', 'w') as file:
+		json.dump(server.data.schedule, file)
 	return Response(200)
 	
 
 def web_gshd_path(server: Server, client: Socket, req: Request) -> Response | None:
 	if server.data.schedule is None:
 		return Response(404)
-	return Response(200).json({
-		'light': {
-			'start': server.data.schedule['light']['start'].strftime("%H:%M"),
-			'end': server.data.schedule['light']['end'].strftime("%H:%M"),
-		},
-		'fan': {
-			'interval_hours': server.data.schedule['fan']['interval_hours'],
-			'duration_minutes': server.data.schedule['fan']['duration_minutes'],
-		},
-		'water': {
-			'interval_hours': server.data.schedule['water']['interval_hours'],
-			'duration_minutes': server.data.schedule['water']['duration_minutes'],
-		},
-	})
+	return Response(200).json(server.data.schedule)
 
 
 def web_gdb1_path(server: Server, client: Socket, req: Request) -> Response | None:

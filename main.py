@@ -1,8 +1,10 @@
 import uuid
+import json
 from time import sleep
 from datetime import datetime, time
 from threading import Lock
 from socket import socket as Socket
+from os.path import isfile
 
 try:
 	import io  # noqa: F401
@@ -41,8 +43,8 @@ data.token = str(uuid.uuid4())
 data.stream_lock = Lock()
 data.schedule = {
 	'light': {
-		'start': time(8, 0),
-		'end': time(18, 0)
+		'start': '08:00',
+		'end': '18:00'
 	},
 	'fan': {
 		'interval_hours': 2,
@@ -53,6 +55,14 @@ data.schedule = {
 		'duration_minutes': 5
 	}
 }
+
+if isfile('schedule.json'):
+	with open('schedule.json', 'rb') as file:
+		try:
+			data.schedule = json.load(file)
+		except:
+			error('Файл schedule.json повреждён или содержет не верный формат')
+
 info('Токен авторизации:', data.token)
 
 
@@ -142,8 +152,8 @@ def main():
 		# ==========================================
 		# 1. УПРАВЛЕНИЕ ОСВЕЩЕНИЕМ (LIGHT)
 		# ==========================================
-		start = data.schedule['light']['start']
-		end = data.schedule['light']['end']
+		start = datetime.strptime(data['light']['start'], "%H:%M").time()
+		end = datetime.strptime(data['light']['end'], "%H:%M").time()
 		
 		# Определяем, каким должен быть свет прямо сейчас (1 - вкл, 0 - выкл)
 		desired_light = 0 

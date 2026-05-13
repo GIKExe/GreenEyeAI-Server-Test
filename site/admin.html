@@ -343,7 +343,7 @@
 
         <!-- Schedule -->
         <div class="control-panel">
-            <div class="card-header">📅 Расписание (Авто)</div>
+            <div class="card-header">📅 Расписание (Авто режим)</div>
             <div class="schedule-grid">
                 <div class="schedule-card">
                     <strong>💡 Свет</strong><br>
@@ -510,16 +510,25 @@
         // --- Load Data ---
         async function loadData() {
             // Parallel requests
-            const [modeData, relays, schedule, guestStatus] = await Promise.all([
+            const [modeData, relays] = await Promise.all([
                 apiGet('/api/command/mode'),
                 apiGet('/api/last_state'),
-                apiGet('/api/schedule'),
-                apiGet('/api/guest/status')
+                // apiGet('/api/schedule'),
+                // apiGet('/api/guest/status')
             ]);
 
             if (modeData) updateUI(modeData.mode, relays);
-            
-            if (schedule) {
+
+            // if (guestStatus) {
+            //     document.getElementById('water-level').textContent = guestStatus.humidity ? `${guestStatus.humidity}%` : '--%';
+            // }
+        }
+
+        async function suck() {
+            const res = await fetch('/api/schedule');
+            if (res.ok) {
+                const schedule = await res.json();
+                // console.log(schedule);
                 document.getElementById('sched-light-start').value = schedule.light?.start || '';
                 document.getElementById('sched-light-end').value = schedule.light?.end || '';
                 document.getElementById('sched-fan-int').value = schedule.fan?.interval_hours || '';
@@ -527,13 +536,10 @@
                 document.getElementById('sched-water-int').value = schedule.water?.interval_hours || '';
                 document.getElementById('sched-water-dur').value = schedule.water?.duration_minutes || '';
             }
-
-            if (guestStatus) {
-                document.getElementById('water-level').textContent = guestStatus.humidity ? `${guestStatus.humidity}%` : '--%';
-            }
         }
 
         // Init
+        suck();
         loadData();
         setInterval(loadData, 10000); // Refresh every 10s
     </script>
