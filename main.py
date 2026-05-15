@@ -10,6 +10,7 @@ try:
 	import io  # noqa: F401
 	import cv2 # type: ignore
 	from picamera2 import Picamera2 # type: ignore
+	from libcamera import controls # type: ignore
 	is_rasberi_server = True
 except:  # noqa: E722
 	is_rasberi_server = False
@@ -114,10 +115,16 @@ def update_stream():
 	
 	picam2 = Picamera2()
 	config = picam2.create_video_configuration(
-			main={"size": (640, 480), "format": "RGB888"},
+			main={"size": (1080, 680), "format": "RGB888"},
 			controls={"FrameRate": 24}, 
 	)
 	picam2.configure(config)
+	picam2.set_controls({
+		# Ручной режим (отключаем автофокус)
+		"AfMode": controls.AfModeEnum.Manual,
+		# Фокус на ~0.5 метра (1 / 2.0 = 0.5м)
+		"LensPosition": 0,
+	})
 	picam2.start()
 	sleep(1)  # прогрев камеры
 
