@@ -1,22 +1,17 @@
-
-
-
-
 async function updateSchedule() {
 	await fetch('/api/schedule')
 		.then(res => res.json())
 		.then(data => {
 			const container = document.getElementById('schedule-view');
 			container.innerHTML = '';
-
 			const addCard = (icon, title, rows) => {
 				const card = document.createElement('div');
 				card.style.cssText = 'background: #f7fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;';
 				let html = `<div style="font-weight: 600; margin-bottom: 10px; font-size: 16px;">${icon} ${title}</div>`;
 				rows.forEach(([label, val]) => {
 					html += `<div style="display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-bottom: 6px;">
-						<span>${label}</span><span style="font-weight: 500; color: #2d3748;">${val || '—'}</span>
-					</div>`;
+							<span>${label}</span> <span style="font-weight: 500; color: #2d3748;">${val || '—'}</span>
+						</div>`;
 				});
 				card.innerHTML = html;
 				container.appendChild(card);
@@ -47,63 +42,79 @@ async function updateState() {
 	const rl = document.getElementById('relay-light');
 	const rf = document.getElementById('relay-fan');
 	const elements = [rw, rl, rf];
-
 	await fetch('/api/last_state')
 		.then(res => res.json())
 		.then(data => {
 			rw.textContent = (data.water ? 'ON' : 'OFF');
-			rw.className = 'relay-status ' + (data.water ? 'on' : 'off')
+			rw.className = 'relay-status ' + (data.water ? 'on' : 'off');
 
 			rl.textContent = (data.light ? 'ON' : 'OFF');
-			rl.className = 'relay-status ' + (data.light ? 'on' : 'off')
+			rl.className = 'relay-status ' + (data.light ? 'on' : 'off');
 
 			rf.textContent = (data.fan ? 'ON' : 'OFF');
-			rf.className = 'relay-status ' + (data.fan ? 'on' : 'off')
+			rf.className = 'relay-status ' + (data.fan ? 'on' : 'off');
 		})
 		.catch(() => {
 			elements.forEach(element => {
 				element.textContent = '???';
 				element.className = 'relay-status wtf';
 			});
-		})
+		});
 }
 
-function makeChart(data, container) {
-		// 1. Очищаем текст загрузки и добавляем canvas
-		container.innerHTML = '<canvas id="fanChart"></canvas>';
-		const ctx = document.getElementById('fanChart').getContext('2d');
+const activeCharts = {};
 
-		if (data.length === 0) {
+async function loadGraph(table, seconds) {
+	const containerId = 'history-' + table;
+	const container = document.getElementById(containerId);
+	if (!container) return;
+
+	// Находим canvas или создаём новый
+	let canvas = container.querySelector('canvas');
+	if (!canvas) {
+		container.innerHTML = '';
+		canvas = document.createElement('canvas');
+		container.appendChild(canvas);
+	}
+
+	// Уничтожаем предыдущий график, если он существует
+	if (activeCharts[containerId]) {
+		activeCharts[containerId].destroy();
+		delete activeCharts[containerId];
+	}
+
+	try {
+		const res = await fetch('/api/graph/table', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ table, seconds })
+		});
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		const data = await res.json();
+
+		if (!data || data.length === 0) {
 			container.innerHTML = '<p style="text-align:center; color:gray;">Нет данных для отображения</p>';
 			return;
 		}
 
-		// data = data.slice(-3);
-
-		// 2. Преобразуем данные для Chart.js
 		const labels = data.map(([ts]) => {
 			const d = new Date(ts * 1000);
 			const hh = String(d.getHours()).padStart(2, '0');
 			const mm = String(d.getMinutes()).padStart(2, '0');
-			// const dd = String(d.getDate()).padStart(2, '0');
-			// const mo = String(d.getMonth() + 1).padStart(2, '0');
-			// return `${hh}:${mm}  ${dd}.${mo}`;
 			return `${hh}:${mm}`;
 		});
-
 		const states = data.map(([, state]) => state);
 
-		// 3. Создаём график
-		new Chart(ctx, {
+		activeCharts[containerId] = new Chart(canvas, {
 			type: 'line',
 			data: {
-				labels: labels,
+				labels,
 				datasets: [{
 					label: 'Состояние',
 					data: states,
 					borderColor: '#2563eb',
 					backgroundColor: 'rgba(37, 99, 235, 0.15)',
-					stepped: 'before', // 🔑 Ключевая настройка для бинарных состояний
+					stepped: 'before',
 					pointRadius: 3,
 					pointHoverRadius: 6,
 					fill: true
@@ -115,93 +126,43 @@ function makeChart(data, container) {
 				interaction: { mode: 'nearest', intersect: false },
 				scales: {
 					y: {
-						min: -0.1,
-						max: 1.1,
-						ticks: {
-							stepSize: 1,
-							callback: value => value === 1 ? 'Вкл' : 'Выкл'
-						},
+						min: -0.1, max: 1.1,
+						ticks: { stepSize: 1, callback: v => v === 1 ? 'Вкл' : 'Выкл' },
 						grid: { color: 'rgba(0,0,0,0.08)' }
 					},
-					x: {
-						grid: { display: false },
-						ticks: {
-							maxRotation: 45,
-							// maxTicksLimit: 15 // Ограничиваем количество подписей, чтобы не слипались
-						}
-					}
+					x: { grid: { display: false }, ticks: { maxRotation: 45 } }
 				},
 				plugins: {
 					legend: { display: false },
 					tooltip: {
 						callbacks: {
-							title: (items) => `Дата: ${items[0].label}`,
-							label: (ctx) => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
+							title: items => `Время: ${items[0].label}`,
+							label: ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
 						}
 					}
 				}
 			}
 		});
+	} catch (err) {
+		console.error(`Ошибка загрузки графика ${table}:`, err);
+		container.innerHTML = '<p style="text-align:center; color:gray;">Ошибка загрузки данных</p>';
+	}
 }
 
 async function updateGraphs() {
-	const hw = document.getElementById('history-water');
-	const hl = document.getElementById('history-light');
-	const hf = document.getElementById('history-fan');
-
-	await fetch('/api/graph/table', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			'table': 'water',
-			'seconds': 21*24*60*60
-		})
-	})
-	.then(res => res.json())
-	.then(data => {
-		makeChart(data, hw);
-	})
-	.catch(() => {
-		hw.innerHTML = '<p style="text-align:center; color:gray;">Ошибка загрузки данных</p>';
-	})
-
-	await fetch('/api/graph/table', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			'table': 'light',
-			'seconds': 21*24*60*60
-		})
-	})
-	.then(res => res.json())
-	.then(data => {
-		makeChart(data, hl);
-	})
-	.catch((error) => {
-		console.error(error);
-		hl.innerHTML = '<p style="text-align:center; color:gray;">Ошибка загрузки данных</p>';
-	})
+	const seconds = 21 * 24 * 60 * 60;
+	await Promise.allSettled([
+		loadGraph('water', seconds),
+		loadGraph('light', seconds),
+		loadGraph('fan', seconds)
+	]);
 }
-
-		// fetch('/api/history')
-		//     .then(res => res.json())
-		//     .then(data => {
-		//         document.getElementById('history-fan').textContent = data.fan || 'Нет данных';
-		//         document.getElementById('history-water').textContent = data.water || 'Нет данных';
-		//         document.getElementById('history-light').textContent = data.light || 'Нет данных';
-		//     }).catch(() => {});
-
-		// 🔹 ТОЛЬКО ЗДЕСЬ ИЗМЕНЁН ФОРМАТ ОТОБРАЖЕНИЯ РАСПИСАНИЯ
-		
-
-
 
 async function updateAll() {
 	await updateState();
 	await updateSchedule();
 	await updateGraphs();
 }
-
 
 updateAll();
 setInterval(updateAll, 5000);
