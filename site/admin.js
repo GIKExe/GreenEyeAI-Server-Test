@@ -23,15 +23,13 @@ async function send_ph() {
 		return;
 	}
 
-	// 2. Простая валидация
-	if (!dateStr || !timeStr) {
-		body = { level }
-	} else {
+	const body = { level, }
+	if (dateStr && timeStr) {
 		const [year, month, day] = dateStr.split('-').map(Number);
 		const [hours, minutes]   = timeStr.split(':').map(Number);
 		const dateObj = new Date(year, month - 1, day, hours, minutes);
 		const time = dateObj.getTime() / 1000;
-		body = { level, time }
+		body.time = time;
 	}
 
 	const res = await fetch('/api/ph', {

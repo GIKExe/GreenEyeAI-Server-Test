@@ -249,7 +249,7 @@ def web_sphl_path(server: Server, client: Socket, req: Request) -> Response | No
 	if ('time' in data):
 		if type(data['time']) is int:
 			data['time'] = float(data['time'])
-		if type(data['time'] is not float):
+		if type(data['time']) is not float:
 			return Response(400)
 		if data['time'] < 0:
 			return Response(400)
