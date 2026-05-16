@@ -117,8 +117,8 @@ function getChartConfig(table) {
 	config.options.plugins.tooltip.callbacks.title = items => `Время: ${items[0].label}`;
 	switch (table) {
 		case 'ph':
-			config.data.datasets.stepped = false;
-			config.data.datasets.tension = 0.4;
+			config.data.datasets[0].stepped = false;
+			config.data.datasets[0].tension = 0.4;
 			config.options.scales.y.min = 0;
 			config.options.scales.y.max = 14;
 			config.options.scales.y.ticks.stepSize = 0.5;
@@ -127,8 +127,8 @@ function getChartConfig(table) {
 			break;
 
 		case 'temperature':
-			config.data.datasets.stepped = false;
-			config.data.datasets.tension = 0.4;
+			config.data.datasets[0].stepped = false;
+			config.data.datasets[0].tension = 0.4;
 			config.options.scales.y.min = -10;
 			config.options.scales.y.max = 40;
 			config.options.scales.y.ticks.stepSize = 5;
@@ -137,8 +137,8 @@ function getChartConfig(table) {
 			break;
 
 		case 'humidity':
-			config.data.datasets.stepped = false;
-			config.data.datasets.tension = 0.4;
+			config.data.datasets[0].stepped = false;
+			config.data.datasets[0].tension = 0.4;
 			config.options.scales.y.min = 0;
 			config.options.scales.y.max = 100;
 			config.options.scales.y.ticks.stepSize = 10;
@@ -147,8 +147,8 @@ function getChartConfig(table) {
 			break;
 	
 		default:
-			config.data.datasets.stepped = 'before';
-			config.data.datasets.tension = 0.0;
+			config.data.datasets[0].stepped = 'before';
+			config.data.datasets[0].tension = 0.0;
 			config.options.scales.y.min = -0.1;
 			config.options.scales.y.max = 1.1;
 			config.options.scales.y.ticks.stepSize = 1;
