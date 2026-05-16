@@ -100,6 +100,12 @@ database.execute('''
 	)
 ''')
 
+database.execute('CREATE INDEX IF NOT EXISTS idx_sensors_ts ON sensors(timestamp)')
+database.execute('CREATE INDEX IF NOT EXISTS idx_light_ts   ON   light(timestamp)')
+database.execute('CREATE INDEX IF NOT EXISTS idx_water_ts   ON   water(timestamp)')
+database.execute('CREATE INDEX IF NOT EXISTS idx_fan_ts     ON     fan(timestamp)')
+database.execute('CREATE INDEX IF NOT EXISTS idx_ph_ts      ON      ph(timestamp)')
+
 
 cluster = Cluster('site')
 if cluster is None:
