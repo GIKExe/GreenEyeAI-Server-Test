@@ -1,3 +1,4 @@
+
 async function updateSchedule() {
 	await fetch('/api/schedule')
 		.then(res => res.json())
@@ -62,6 +63,102 @@ async function updateState() {
 		});
 }
 
+
+const baseChartConfig = {
+	type: 'line',
+	data: {
+		labels: [],
+		datasets: [{
+			label: 'Состояние',
+			data: [],
+			borderColor: '#2563eb',
+			backgroundColor: 'rgba(37, 99, 235, 0.15)',
+			stepped: 'before',
+			tension: 0.0,
+			pointRadius: 3,
+			pointHoverRadius: 6,
+			fill: true
+		}]
+	},
+	options: {
+		responsive: true,
+		maintainAspectRatio: false,
+		animation: false,
+		interaction: { mode: 'nearest', intersect: false },
+		scales: {
+			y: {
+				min: -0.1,
+				max: 1.1,
+				ticks: {
+					stepSize: 1,
+					// callback: value => value > 0 ? 'Вкл' : 'Выкл'
+				},
+				grid: { color: 'rgba(0,0,0,0.08)' }
+			},
+			x: {
+				grid: { display: false },
+				ticks: { maxRotation: 45 }
+			}
+		},
+		plugins: {
+			legend: { display: false },
+			tooltip: {
+				callbacks: {
+					// title: items => `Время: ${items[0].label}`,
+					// label: ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
+				}
+			}
+		}
+	}
+}
+
+function getChartConfig(table) {
+	const config = structuredClone(baseChartConfig);
+	config.options.plugins.tooltip.callbacks.title = items => `Время: ${items[0].label}`;
+	switch (table) {
+		case 'ph':
+			config.data.datasets.stepped = false;
+			config.data.datasets.tension = 0.4;
+			config.options.scales.y.min = 0;
+			config.options.scales.y.max = 14;
+			config.options.scales.y.ticks.stepSize = 0.5;
+			config.options.scales.y.ticks.callback = value => value
+			config.options.plugins.tooltip.callbacks.label = ctx => `Среда: ${ctx.raw} ${ctx.raw < 6 ? '(кислотная)' : (ctx.raw > 8 ? '(щелочная)' : '(нейтральная)')}`
+			break;
+
+		case 'temperature':
+			config.data.datasets.stepped = false;
+			config.data.datasets.tension = 0.4;
+			config.options.scales.y.min = -10;
+			config.options.scales.y.max = 40;
+			config.options.scales.y.ticks.stepSize = 5;
+			config.options.scales.y.ticks.callback = value => value
+			config.options.plugins.tooltip.callbacks.label = ctx => `Температура: ${ctx.raw}°C`
+			break;
+
+		case 'humidity':
+			config.data.datasets.stepped = false;
+			config.data.datasets.tension = 0.4;
+			config.options.scales.y.min = 0;
+			config.options.scales.y.max = 100;
+			config.options.scales.y.ticks.stepSize = 10;
+			config.options.scales.y.ticks.callback = value => value
+			config.options.plugins.tooltip.callbacks.label = ctx => `Влажность: ${ctx.raw}%`
+			break;
+	
+		default:
+			config.data.datasets.stepped = 'before';
+			config.data.datasets.tension = 0.0;
+			config.options.scales.y.min = -0.1;
+			config.options.scales.y.max = 1.1;
+			config.options.scales.y.ticks.stepSize = 1;
+			config.options.scales.y.ticks.callback = value => value > 0 ? 'Вкл' : 'Выкл'
+			config.options.plugins.tooltip.callbacks.label = ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
+			break;
+	}
+	return config;
+}
+
 // Хранилище инстансов графиков
 const charts = {};
 
@@ -74,61 +171,12 @@ function updateChartWithData(table, data) {
 		const container = document.getElementById(containerId);
 		if (!container) return;
 
-		// Очищаем текст "Загрузка..." и создаём canvas
 		container.innerHTML = '';
 		const canvas = document.createElement('canvas');
 		container.appendChild(canvas);
-
-		// Создаём график с отключённой анимацией, чтобы убрать моргание
-		charts[containerId] = new Chart(canvas, {
-			type: 'line',
-			data: {
-				labels: [],
-				datasets: [{
-					label: 'Состояние',
-					data: [],
-					borderColor: '#2563eb',
-					backgroundColor: 'rgba(37, 99, 235, 0.15)',
-					stepped: isph ? false : 'before',
-					tension: isph ? 0.4 : 0.0,
-					pointRadius: 3,
-					pointHoverRadius: 6,
-					fill: true
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				animation: false,
-				interaction: { mode: 'nearest', intersect: false },
-				scales: {
-					y: {
-						min: isph ? 0 : -0.1,
-						max: isph ? 14 : 1.1,
-						ticks: {
-							stepSize: 1,
-							callback: value => isph ? value : (value > 0 ? 'Вкл' : 'Выкл')
-						},
-						grid: { color: 'rgba(0,0,0,0.08)' }
-					},
-					x: {
-						grid: { display: false },
-						ticks: { maxRotation: 45 }
-					}
-				},
-				plugins: {
-					legend: { display: false },
-					tooltip: {
-						callbacks: {
-							title: items => `Время: ${items[0].label}`,
-							label: ctx => `${isph ? 'Среда' : 'Состояние'}: ${isph ? (ctx.raw < 6 ? `${ctx.raw} (кислотная)` : ctx.raw > 8 ? `${ctx.raw} (щелочная)` : `${ctx.raw} (нейтральная)`) : (ctx.raw === 1 ? 'Вкл' : 'Выкл')}`
-						}
-					}
-				}
-			}
-		});
+		
+		charts[containerId] = new Chart(canvas, getChartConfig(table));
 	};
-
 
 	const chart = charts[containerId];
 	if (!chart) return;
@@ -173,7 +221,16 @@ async function reqToTable(table, seconds) {
 			if (!res.ok) throw new Error(`HTTP ${res.status}`);
 			return res.json();
 		})
-		.then(data => updateChartWithData(table, data))
+		.then(data => {
+			if (table === 'sensors') {
+				const temperature = data.map(subarray => [subarray[0], subarray[1]]);
+				const humidity = data.map(subarray => [subarray[0], subarray[2]]);
+				updateChartWithData('temperature', temperature);
+				updateChartWithData('humidity', humidity);
+			} else {
+				updateChartWithData(table, data);
+			}
+		})
 		.catch(err => console.error(`Ошибка загрузки графика ${table}:`, err))
 }
 
@@ -181,10 +238,11 @@ async function reqToTable(table, seconds) {
 async function updateGraphs() {
 	const day = 24 * 60 * 60;
 	await Promise.allSettled([
-		reqToTable('water', day  ),
-		reqToTable('light', day  ),
-		reqToTable('fan',   day  ),
-		reqToTable('ph',    day*7),
+		reqToTable('water',   day  ),
+		reqToTable('light',   day  ),
+		reqToTable('fan',     day  ),
+		reqToTable('ph',      day*7),
+		reqToTable('sensors', day  ),
 	]);
 }
 
