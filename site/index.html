@@ -20,210 +20,59 @@
         </nav>
     </header>
 
-    <main class="container">
-        <!-- System Status -->
-        <!-- <section class="section" id="dashboard">
-            <h2 class="section-title">
-                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                Состояние системы
-            </h2>
-            <div class="status-grid">
-                <div class="status-item">
-                    <div class="status-label">Сервер</div>
-                    <div class="status-value online" id="server-status">...</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">БД</div>
-                    <div class="status-value" id="db-status">...</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">Режим</div>
-                    <div class="status-value" id="sys-mode">...</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">Аптайм</div>
-                    <div class="status-value" id="uptime">...</div>
-                </div>
-            </div>
-        </section> -->
-
-        <!-- Relay Status -->
-        <section class="section">
-            <h2 class="section-title">
-                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
-                Реле (последнее состояние)
-            </h2>
+    <div class="container">
+        <section class="section" id="dashboard">
+            <h2 class="section-title">📊 Реле (последнее состояние)</h2>
             <div class="relay-grid">
                 <div class="relay-item">
-                    <div class="relay-label">
-                        <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>
-                        Вода
-                    </div>
-                    <div class="relay-status off" id="rel-water">OFF</div>
+                    <span class="relay-label">🚿 Полив</span>
+                    <span id="relay-water" class="relay-status wtf">???</span>
                 </div>
                 <div class="relay-item">
-                    <div class="relay-label">
-                        <svg viewBox="0 0 24 24" fill="#ecc94b" style="width:24px;height:24px"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
-                        Свет
-                    </div>
-                    <div class="relay-status off" id="rel-light">OFF</div>
+                    <span class="relay-label">💡 Освещение</span>
+                    <span id="relay-light" class="relay-status wtf">???</span>
                 </div>
                 <div class="relay-item">
-                    <div class="relay-label">
-                        <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-                        Вентилятор
-                    </div>
-                    <div class="relay-status off" id="rel-fan">OFF</div>
+                    <span class="relay-label">🌀 Обдув</span>
+                    <span id="relay-fan" class="relay-status wtf">???</span>
                 </div>
             </div>
         </section>
 
-        <!-- Schedule -->
         <section class="section">
-            <h2 class="section-title">
-                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-                Расписание
-            </h2>
-            <div class="schedule-display" id="schedule-display">Загрузка...</div>
+            <h2 class="section-title">📅 Расписание</h2>
+            <div id="schedule-view" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                Загрузка...
+            </div>
         </section>
 
-        <!-- Charts -->
         <section class="section" id="graphs">
-            <h2 class="section-title">
-                <svg viewBox="0 0 24 24" fill="#48bb78" style="width:24px;height:24px"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
-                История состояний
-            </h2>
+            <h2 class="section-title">📈 История состояний</h2>
             <div class="charts-grid">
                 <div class="chart-item">
-                    <div class="chart-title">Состояние обдува</div>
-                    <div id="fan-state-chart">Загрузка данных...</div>
+                    <div class="chart-title">🌀 Состояние обдува:</div>
+                    <div id="history-fan">Загрузка данных...</div>
                 </div>
                 <div class="chart-item">
-                    <div class="chart-title">Состояние полива</div>
-                    <div id="water-state-chart">Загрузка данных...</div>
+                    <div class="chart-title">🚿 Состояние полива:</div>
+                    <div id="history-water">Загрузка данных...</div>
                 </div>
                 <div class="chart-item">
-                    <div class="chart-title">Состояние освещения</div>
-                    <div id="light-state-chart">Загрузка данных...</div>
+                    <div class="chart-title">💡 Состояние освещения:</div>
+                    <div id="history-light">Загрузка данных...</div>
                 </div>
             </div>
         </section>
 
-        <!-- Camera -->
         <section class="section" id="stream">
-            <h2 class="section-title">
-                <svg viewBox="0 0 24 24" fill="#2d3748" style="width:24px;height:24px"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                Камеры наблюдения
-            </h2>
+            <h2 class="section-title">📹 Камера наблюдения</h2>
             <div class="camera-container">
-                <img id="camera-stream" src="/api/stream" alt="Поток с камеры">
+                <img id="camera-feed" src="/api/stream" alt="Поток камеры" onerror="this.style.display='none'">
             </div>
         </section>
-    </main>
+    </div>
 
-    <script>
-        async function apiGet(endpoint) {
-            try {
-                const res = await fetch(endpoint);
-                return res.ok ? await res.json() : null;
-            } catch (e) {
-                console.error(e);
-                return null;
-            }
-        }
-        
-        function formatUptime(sec) {
-            const h = Math.floor(sec / 3600);
-            const m = Math.floor((sec % 3600) / 60);
-            return `${h}ч ${m}м`;
-        }
-        
-        async function updateDashboard() {
-            const [relays, schedule] = await Promise.all([
-                // apiGet('/api/guest/status'),
-                // apiGet('/api/status'),
-                apiGet('/api/last_state'),
-                apiGet('/api/schedule')
-            ]);
-
-            // if (server) {
-            //     document.getElementById('server-status').textContent = server.status || '...';
-            //     document.getElementById('db-status').textContent = server.db_status || '...';
-            //     document.getElementById('uptime').textContent = formatUptime(server.uptime || 0);
-            // }
-            
-            // if (status) {
-            //     document.getElementById('sys-mode').textContent = (status.mode || '...').toUpperCase();
-            // }
-            
-            if (relays) {
-                const state = v => v == 1 ? 'ON' : 'OFF';
-                const statusClass = v => v == 1 ? 'on' : 'off';
-                
-                const waterEl = document.getElementById('rel-water');
-                waterEl.textContent = state(relays.water);
-                waterEl.className = `relay-status ${statusClass(relays.water)}`;
-                
-                const lightEl = document.getElementById('rel-light');
-                lightEl.textContent = state(relays.light);
-                lightEl.className = `relay-status ${statusClass(relays.light)}`;
-                
-                const fanEl = document.getElementById('rel-fan');
-                fanEl.textContent = state(relays.fan);
-                fanEl.className = `relay-status ${statusClass(relays.fan)}`;
-            }
-            
-            if (schedule) {
-                document.getElementById('schedule-display').textContent = JSON.stringify(schedule, null, 2);
-            }
-            
-            // Load charts
-            await loadCharts();
-        }
-        
-        async function loadCharts() {
-            // const waterData = await apiGet('/api/graph/table?table=water&seconds=600');
-            // if (waterData && waterData.table) {
-            //     document.getElementById('water-chart').innerHTML = `Данных: ${waterData.table.length} записей за последние 10 минут`;
-            // }
-
-            try {
-                const response = await fetch('/api/graph/table', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        'table': 'fan',
-                        'seconds': 10*60
-                    })
-                });
-
-                // Проверка статуса (2xx)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                console.log('Данные получены:', data);
-                document.getElementById('fan-state-chart').innerHTML = `Данных: ${data} записей за последние 10 минут`;
-            } catch (error) {
-                console.error('Ошибка запроса:', error.message);
-                // Дополнительная обработка ошибок (сеть, таймаут и т.д.)
-            }
-            
-            // const fanData = await apiGet('/api/graph/table?table=fan&seconds=600');
-            // if (fanData && fanData.table) {
-            //     document.getElementById('water-state-chart').innerHTML = `Данных: ${fanData.table.length} записей за последние 10 минут`;
-            // }
-            
-            // const lightData = await apiGet('/api/graph/table?table=light&seconds=600');
-            // if (lightData && lightData.table) {
-            //     document.getElementById('light-state-chart').innerHTML = `Данных: ${lightData.table.length} записей за последние 10 минут`;
-            // }
-        }
-        
-        // Initial load
-        updateDashboard();
-        setInterval(updateDashboard, 5000); // Update every 5 seconds
-    </script>
+    <script src="/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

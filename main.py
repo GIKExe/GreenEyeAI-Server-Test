@@ -1,7 +1,7 @@
 import uuid
 import json
 from time import sleep
-from datetime import datetime, time
+from datetime import datetime
 from threading import Lock
 from socket import socket as Socket
 from os.path import isfile
@@ -61,7 +61,7 @@ if isfile('schedule.json'):
 	with open('schedule.json', 'rb') as file:
 		try:
 			data.schedule = json.load(file)
-		except:
+		except:  # noqa: E722
 			error('Файл schedule.json повреждён или содержет не верный формат')
 
 info('Токен авторизации:', data.token)

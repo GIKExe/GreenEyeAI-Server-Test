@@ -210,7 +210,7 @@ def web_gdb2_path(server: Server, client: Socket, req: Request) -> Response | No
 
 def web_gstr_path(server: Server, client: Socket, req: Request) -> Response | None:
 	if server.data.stream is None:
-		return Response(500)
+		return Response(404)
 	res = Response(200)
 	res.header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
 	client.send(res.to_bytes())
