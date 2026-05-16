@@ -10,8 +10,8 @@ async function updateSchedule() {
 				let html = `<div style="font-weight: 600; margin-bottom: 10px; font-size: 16px;">${icon} ${title}</div>`;
 				rows.forEach(([label, val]) => {
 					html += `<div style="display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-bottom: 6px;">
-							<span>${label}</span> <span style="font-weight: 500; color: #2d3748;">${val || '—'}</span>
-						</div>`;
+						<span>${label}</span> <span style="font-weight: 500; color: #2d3748;">${val || '—'}</span>
+					</div>`;
 				});
 				card.innerHTML = html;
 				container.appendChild(card);
@@ -62,100 +62,122 @@ async function updateState() {
 		});
 }
 
-const activeCharts = {};
+// Хранилище инстансов графиков
+const charts = {};
 
-async function loadGraph(table, seconds) {
-	const containerId = 'history-' + table;
+// Инициализация графика
+function initChart(containerId) {
+	if (charts[containerId]) return;
+	
 	const container = document.getElementById(containerId);
 	if (!container) return;
 
-	// Находим canvas или создаём новый
-	let canvas = container.querySelector('canvas');
-	if (!canvas) {
-		container.innerHTML = '';
-		canvas = document.createElement('canvas');
-		container.appendChild(canvas);
-	}
+	// Очищаем текст "Загрузка..." и создаём canvas
+	container.innerHTML = '';
+	const canvas = document.createElement('canvas');
+	container.appendChild(canvas);
 
-	// Уничтожаем предыдущий график, если он существует
-	if (activeCharts[containerId]) {
-		activeCharts[containerId].destroy();
-		delete activeCharts[containerId];
-	}
-
-	try {
-		const res = await fetch('/api/graph/table', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ table, seconds })
-		});
-		if (!res.ok) throw new Error(`HTTP ${res.status}`);
-		const data = await res.json();
-
-		if (!data || data.length === 0) {
-			container.innerHTML = '<p style="text-align:center; color:gray;">Нет данных для отображения</p>';
-			return;
-		}
-
-		const labels = data.map(([ts]) => {
-			const d = new Date(ts * 1000);
-			const hh = String(d.getHours()).padStart(2, '0');
-			const mm = String(d.getMinutes()).padStart(2, '0');
-			return `${hh}:${mm}`;
-		});
-		const states = data.map(([, state]) => state);
-
-		activeCharts[containerId] = new Chart(canvas, {
-			type: 'line',
-			data: {
-				labels,
-				datasets: [{
-					label: 'Состояние',
-					data: states,
-					borderColor: '#2563eb',
-					backgroundColor: 'rgba(37, 99, 235, 0.15)',
-					stepped: 'before',
-					pointRadius: 3,
-					pointHoverRadius: 6,
-					fill: true
-				}]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				interaction: { mode: 'nearest', intersect: false },
-				scales: {
-					y: {
-						min: -0.1, max: 1.1,
-						ticks: { stepSize: 1, callback: v => v === 1 ? 'Вкл' : 'Выкл' },
-						grid: { color: 'rgba(0,0,0,0.08)' }
+	// Создаём график с отключённой анимацией, чтобы убрать моргание
+	charts[containerId] = new Chart(canvas, {
+		type: 'line',
+		data: {
+			labels: [],
+			datasets: [{
+				label: 'Состояние',
+				data: [],
+				borderColor: '#2563eb',
+				backgroundColor: 'rgba(37, 99, 235, 0.15)',
+				stepped: 'before',
+				pointRadius: 3,
+				pointHoverRadius: 6,
+				fill: true
+			}]
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			animation: false,
+			interaction: { mode: 'nearest', intersect: false },
+			scales: {
+				y: {
+					min: -0.1,
+					max: 1.1,
+					ticks: {
+						stepSize: 1,
+						callback: value => value > 0 ? 'Вкл' : 'Выкл'
 					},
-					x: { grid: { display: false }, ticks: { maxRotation: 45 } }
+					grid: { color: 'rgba(0,0,0,0.08)' }
 				},
-				plugins: {
-					legend: { display: false },
-					tooltip: {
-						callbacks: {
-							title: items => `Время: ${items[0].label}`,
-							label: ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
-						}
+				x: {
+					grid: { display: false },
+					ticks: { maxRotation: 45 }
+				}
+			},
+			plugins: {
+				legend: { display: false },
+				tooltip: {
+					callbacks: {
+						title: items => `Время: ${items[0].label}`,
+						label: ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
 					}
 				}
 			}
-		});
-	} catch (err) {
-		console.error(`Ошибка загрузки графика ${table}:`, err);
-		container.innerHTML = '<p style="text-align:center; color:gray;">Ошибка загрузки данных</p>';
-	}
+		}
+	});
 }
 
+// Обновление данных в существующем графике
+function updateChartWithData(table, data) {
+	const containerId = 'history-' + table;
+	initChart(containerId);
+	const chart = charts[containerId];
+	if (!chart) return;
+
+	// Если данных нет или ошибка, очищаем график и выводим в консоль
+	if (!Array.isArray(data) || data.length === 0) {
+		console.warn(`Нет данных для графика: ${table}`);
+		chart.data.labels = [];
+		chart.data.datasets[0].data = [];
+		chart.update();
+		return;
+	}
+
+	// Оставляем только последние 20 записей
+	data = data.slice(-20);
+
+	// Преобразуем timestamp → ЧЧ:ММ
+	chart.data.labels = data.map(([ts]) => {
+		const d = new Date(ts * 1000);
+		const hh = String(d.getHours()).padStart(2, '0');
+		const mm = String(d.getMinutes()).padStart(2, '0');
+		return `${hh}:${mm}`;
+	});
+	chart.data.datasets[0].data = data.map(([, state]) => state);
+
+	// Быстрое обновление без полной перерисовки
+	chart.update();
+}
+
+// Параллельная загрузка и обновление графиков
 async function updateGraphs() {
-	const seconds = 21 * 24 * 60 * 60;
-	await Promise.allSettled([
-		loadGraph('water', seconds),
-		loadGraph('light', seconds),
-		loadGraph('fan', seconds)
-	]);
+	const seconds = 24 * 60 * 60;
+	const tables = ['water', 'light', 'fan'];
+
+	const promises = tables.map(table =>
+		fetch('/api/graph/table', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ table, seconds })
+		})
+		.then(res => {
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			return res.json();
+		})
+		.then(data => updateChartWithData(table, data))
+		.catch(err => console.error(`Ошибка загрузки графика ${table}:`, err)) // 🔴 Только консоль, без DOM-ошибок
+	);
+
+	await Promise.allSettled(promises);
 }
 
 async function updateAll() {

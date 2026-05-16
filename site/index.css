@@ -125,6 +125,7 @@ body {
 }
 
 .relay-item {
+    border: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -197,6 +198,7 @@ body {
 }
 
 .chart-item {
+    border: 1px solid #e2e8f0;
     background: #f7fafc;
     padding: 20px;
     border-radius: 12px;
