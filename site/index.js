@@ -65,71 +65,71 @@ async function updateState() {
 // Хранилище инстансов графиков
 const charts = {};
 
-// Инициализация графика
-function initChart(containerId) {
-	if (charts[containerId]) return;
-	
-	const container = document.getElementById(containerId);
-	if (!container) return;
+// Обновление данных в существующем графике
+function updateChartWithData(table, data) {
+	const isph = table === 'ph';
+	const containerId = 'history-' + table;
 
-	// Очищаем текст "Загрузка..." и создаём canvas
-	container.innerHTML = '';
-	const canvas = document.createElement('canvas');
-	container.appendChild(canvas);
+	if (!charts[containerId]) {
+		const container = document.getElementById(containerId);
+		if (!container) return;
 
-	// Создаём график с отключённой анимацией, чтобы убрать моргание
-	charts[containerId] = new Chart(canvas, {
-		type: 'line',
-		data: {
-			labels: [],
-			datasets: [{
-				label: 'Состояние',
-				data: [],
-				borderColor: '#2563eb',
-				backgroundColor: 'rgba(37, 99, 235, 0.15)',
-				stepped: 'before',
-				pointRadius: 3,
-				pointHoverRadius: 6,
-				fill: true
-			}]
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			animation: false,
-			interaction: { mode: 'nearest', intersect: false },
-			scales: {
-				y: {
-					min: -0.1,
-					max: 1.1,
-					ticks: {
-						stepSize: 1,
-						callback: value => value > 0 ? 'Вкл' : 'Выкл'
-					},
-					grid: { color: 'rgba(0,0,0,0.08)' }
-				},
-				x: {
-					grid: { display: false },
-					ticks: { maxRotation: 45 }
-				}
+		// Очищаем текст "Загрузка..." и создаём canvas
+		container.innerHTML = '';
+		const canvas = document.createElement('canvas');
+		container.appendChild(canvas);
+
+		// Создаём график с отключённой анимацией, чтобы убрать моргание
+		charts[containerId] = new Chart(canvas, {
+			type: 'line',
+			data: {
+				labels: [],
+				datasets: [{
+					label: 'Состояние',
+					data: [],
+					borderColor: '#2563eb',
+					backgroundColor: 'rgba(37, 99, 235, 0.15)',
+					stepped: isph ? false : 'before',
+					tension: isph ? 0.4 : 0.0,
+					pointRadius: 3,
+					pointHoverRadius: 6,
+					fill: true
+				}]
 			},
-			plugins: {
-				legend: { display: false },
-				tooltip: {
-					callbacks: {
-						title: items => `Время: ${items[0].label}`,
-						label: ctx => `Состояние: ${ctx.raw === 1 ? 'Вкл' : 'Выкл'}`
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				animation: false,
+				interaction: { mode: 'nearest', intersect: false },
+				scales: {
+					y: {
+						min: isph ? 0 : -0.1,
+						max: isph ? 14 : 1.1,
+						ticks: {
+							stepSize: 1,
+							callback: value => isph ? value : (value > 0 ? 'Вкл' : 'Выкл')
+						},
+						grid: { color: 'rgba(0,0,0,0.08)' }
+					},
+					x: {
+						grid: { display: false },
+						ticks: { maxRotation: 45 }
+					}
+				},
+				plugins: {
+					legend: { display: false },
+					tooltip: {
+						callbacks: {
+							title: items => `Время: ${items[0].label}`,
+							label: ctx => `${isph ? 'Среда' : 'Состояние'}: ${isph ? (ctx.raw < 6 ? `${ctx.raw} (кислотная)` : ctx.raw > 8 ? `${ctx.raw} (щелочная)` : `${ctx.raw} (нейтральная)`) : (ctx.raw === 1 ? 'Вкл' : 'Выкл')}`
+						}
 					}
 				}
 			}
-		}
-	});
-}
+		});
+	};
 
-// Обновление данных в существующем графике
-function updateChartWithData(table, data) {
-	const containerId = 'history-' + table;
-	initChart(containerId);
+
 	const chart = charts[containerId];
 	if (!chart) return;
 
@@ -150,6 +150,11 @@ function updateChartWithData(table, data) {
 		const d = new Date(ts * 1000);
 		const hh = String(d.getHours()).padStart(2, '0');
 		const mm = String(d.getMinutes()).padStart(2, '0');
+		if (isph) {
+			const dd = String(d.getDate()).padStart(2, '0');
+			const mo = String(d.getMonth() + 1).padStart(2, '0');
+			return `${hh}:${mm}  ${dd}.${mo}`;
+		}
 		return `${hh}:${mm}`;
 	});
 	chart.data.datasets[0].data = data.map(([, state]) => state);
@@ -158,13 +163,8 @@ function updateChartWithData(table, data) {
 	chart.update();
 }
 
-// Параллельная загрузка и обновление графиков
-async function updateGraphs() {
-	const seconds = 24 * 60 * 60;
-	const tables = ['water', 'light', 'fan'];
-
-	const promises = tables.map(table =>
-		fetch('/api/graph/table', {
+async function reqToTable(table, seconds) {
+	await fetch('/api/graph/table', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ table, seconds })
@@ -174,10 +174,18 @@ async function updateGraphs() {
 			return res.json();
 		})
 		.then(data => updateChartWithData(table, data))
-		.catch(err => console.error(`Ошибка загрузки графика ${table}:`, err)) // 🔴 Только консоль, без DOM-ошибок
-	);
+		.catch(err => console.error(`Ошибка загрузки графика ${table}:`, err))
+}
 
-	await Promise.allSettled(promises);
+// Параллельная загрузка и обновление графиков
+async function updateGraphs() {
+	const day = 24 * 60 * 60;
+	await Promise.allSettled([
+		reqToTable('water', day  ),
+		reqToTable('light', day  ),
+		reqToTable('fan',   day  ),
+		reqToTable('ph',    day*7),
+	]);
 }
 
 async function updateAll() {

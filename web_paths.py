@@ -239,13 +239,26 @@ def web_sphl_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(400)
 	if data['token'] != server.data.token:
 		return Response(400)
+	if type(data['level']) is int:
+		data['level'] = float(data['level'])
 	if type(data['level']) is not float:
 		return Response(400)
 	if (data['level'] < 0) or (data['level'] > 14):
 		return Response(400)
 	
+	if ('time' in data):
+		if type(data['time']) is int:
+			data['time'] = float(data['time'])
+		if type(data['time'] is not float):
+			return Response(400)
+		if data['time'] < 0:
+			return Response(400)
+		timestamp = data['time']
+	else:
+		timestamp = datetime.now().timestamp()
+	
 	server.database.execute(
 		'INSERT INTO ph (timestamp, level) VALUES (?, ?)',
-		(datetime.now().timestamp(), data['level'])
+		(timestamp, data['level'])
 	)
 	return Response(200)
