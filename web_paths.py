@@ -177,12 +177,12 @@ def web_gdb1_path(server: Server, client: Socket, req: Request) -> Response | No
 		return Response(400)
 	table = data['table']
 	seconds = data['seconds']
-	data = server.database.execute('''
-		SELECT * FROM ?
-		WHERE timestamp >= unixepoch('now') - ? 
+	data = server.database.execute(f'''
+		SELECT * FROM {table}
+		WHERE timestamp >= unixepoch('now') - {seconds}
 		ORDER BY timestamp DESC 
 		LIMIT 20;
-	''', (table, seconds,), mode=3)
+	''', mode=3)
 	if data is None:
 		return Response(500)
 	return Response(200).json(data[::-1])
