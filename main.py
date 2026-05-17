@@ -158,7 +158,8 @@ def photo_processing():
 		if (timestamp - last_screenshot_time > 60):
 			last_screenshot_time = timestamp
 			image_queue.clear()
-			img = Image.open(BytesIO(data.stream))
+			with data.stream_lock:
+				img = Image.open(BytesIO(data.stream))
 
 			idx = 1
 			for r in range(rows):
@@ -222,7 +223,8 @@ def update_stream():
 		frame = picam2.capture_array()
 		ret, buffer = cv2.imencode('.jpg', frame)
 		jpeg_bytes = buffer.tobytes()
-		data.stream = jpeg_bytes
+		with data.stream_lock:
+			data.stream = jpeg_bytes
 
 
 @nonblocking
