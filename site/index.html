@@ -13,9 +13,10 @@
             GreenEye AI
         </div>
         <nav class="nav">
-            <a href="#dashboard">Дашборд</a>
-            <a href="#graphs">Графики</a>
-            <a href="#stream">Камера</a>
+            <a href="/#dashboard">Дашборд</a>
+            <a href="/#graphs">Графики</a>
+            <a href="/#stream">Камера</a>
+            <a href="/#plants">Растения</a>
             <a href="/admin" class="admin-link">Вход для админа</a>
         </nav>
     </header>
@@ -80,6 +81,14 @@
             <h2 class="section-title">📹 Камера наблюдения</h2>
             <div class="camera-container">
                 <img id="camera-feed" src="/api/stream" alt="Поток камеры" onerror="this.style.display='none'">
+            </div>
+        </section>
+
+        <section class="section" id="plants">
+            <h2 class="section-title">🌱 Мониторинг растений</h2>
+            <div class="plant-grid" id="plant-grid">
+                <!-- Квадраты будут сгенерированы JS -->
+                Загрузка состояний...
             </div>
         </section>
     </div>

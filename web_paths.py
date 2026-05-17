@@ -264,3 +264,7 @@ def web_sphl_path(server: Server, client: Socket, req: Request) -> Response | No
 		(timestamp, data['level'])
 	)
 	return Response(200)
+
+
+def web_gpts_path(server: Server, client: Socket, req: Request) -> Response | None:
+	return Response(200).json(server.data.plants)

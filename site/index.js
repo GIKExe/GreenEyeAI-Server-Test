@@ -246,10 +246,59 @@ async function updateGraphs() {
 	]);
 }
 
+// === Логика сетки растений ===
+const PLANT_STATUSES = {
+	healthy:  { class: 'healthy',  label: '🌿 Здоровое' },
+	wilted:   { class: 'wilted',   label: '🥀 Вялое' },
+	diseased: { class: 'diseased', label: '🤒 Заболело' },
+	dried:    { class: 'dried',    label: '💀 Засохло' },
+	empty:    { class: 'empty',    label: '⬛ Нет растения' }
+};
+
+async function updatePlantGrid() {
+	const grid = document.getElementById('plant-grid');
+	if (!grid) return;
+
+	let mockData = {};
+	await fetch('/api/plants')
+		.then(res => {
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			return res.json();
+		})
+		.then(data => {
+			mockData = data;
+		})
+		.catch(err => {
+			console.error('Ошибка загрузки растений:', err);
+			return;
+		})
+
+	// === Отрисовка сетки ===
+	grid.innerHTML = '';
+
+	// Используем Object.entries() для перебора {id: status}
+	Object.entries(mockData).forEach(([id, statusKey]) => {
+		const status = PLANT_STATUSES[statusKey];
+		if (!status) return; // защита от неизвестных статусов
+
+		const square = document.createElement('div');
+		square.className = `plant-square ${status.class}`;
+		square.setAttribute('tabindex', '0');
+
+		const tooltip = document.createElement('span');
+		tooltip.className = 'plant-tooltip';
+		tooltip.textContent = `${status.label} | Позиция: ${id}`;
+
+		square.appendChild(tooltip);
+		grid.appendChild(square);
+	});
+}
+
 async function updateAll() {
 	await updateState();
 	await updateSchedule();
 	await updateGraphs();
+	await updatePlantGrid();
 }
 
 updateAll();
