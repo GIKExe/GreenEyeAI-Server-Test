@@ -179,7 +179,7 @@ def photo_processing():
 		start = datetime.now().timestamp()
 		if len(image_queue) > 0:
 			img, idx = image_queue.pop(0)
-			results: list[Results] = model(img, save=False, conf=0.3, verbose=False)
+			results: list[Results] = model(img, save=False, conf=0.2, verbose=False)
 			for result in results:
 				boxes = result.boxes
 				if boxes is not None and len(boxes) > 0:
