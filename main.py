@@ -133,7 +133,7 @@ def photo_processing():
 	if (not is_model_server):
 		return
 	
-	x1, y1 = (146, 86)
+	x1, y1 = (130, 100)
 	x2, y2 = (x1+738, y1+551)
 
 	# 1. Нормализуем координаты (на случай, если x2 < x1 или y2 < y1)
@@ -179,7 +179,7 @@ def photo_processing():
 		start = datetime.now().timestamp()
 		if len(image_queue) > 0:
 			img, idx = image_queue.pop(0)
-			results: list[Results] = model(img, save=False, conf=0.25, verbose=False)
+			results: list[Results] = model(img, save=False, conf=0.20, verbose=False)
 			for result in results:
 				boxes = result.boxes
 				if boxes is not None and len(boxes) > 0:
