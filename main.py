@@ -158,7 +158,7 @@ def photo_processing():
 	
 	while True:
 		timestamp = datetime.now().timestamp()
-		if (timestamp - last_screenshot_time > 60):
+		if (timestamp - last_screenshot_time > 30):
 			last_screenshot_time = timestamp
 			image_queue.clear()
 			img = Image.open(BytesIO(data.stream))
